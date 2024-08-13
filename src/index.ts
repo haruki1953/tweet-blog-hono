@@ -1,16 +1,19 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
+import { cors } from 'hono/cors'
+
+import { httpPort } from './configs'
+import { publicRouter } from './routers'
 
 const app = new Hono()
 
-app.get('/', (c) => {
-  return c.text('Hello Hono!')
-})
+app.use(cors())
 
-const port = 3000
-console.log(`Server is running on port ${port}`)
+app.route('/public', publicRouter)
+
+console.log(`Server is running on port ${httpPort}`)
 
 serve({
   fetch: app.fetch,
-  port
+  port: httpPort
 })
