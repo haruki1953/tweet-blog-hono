@@ -1,11 +1,24 @@
 import { useSetup } from './init'
-import { confirmAuth, updateAuth } from './srevices'
+import {
+  confirmAuth,
+  updateAuth,
+  isAuthDefault,
+  getJwtAdminExpSeconds,
+  getJwtAdminSecretKey,
+  getAdminInfo,
+  updateAdminInfo
+} from './srevices'
 
 useSetup()
 
 export const useAdminSystem = () => {
   return {
     confirmAuth,
-    updateAuth
+    updateAuth,
+    isAuthDefault,
+    getJwtAdminSecretKey,
+    getJwtAdminExpSeconds,
+    getAdminInfo,
+    updateAdminInfo
   }
 }

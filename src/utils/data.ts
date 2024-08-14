@@ -3,13 +3,12 @@ import type { ResData } from '@/types'
 
 // handle response data
 export const handleResData = (
-  code: number, message: string, data?: any, token?: string
+  code: number, message: string, data?: any
 ): ResData => {
   return {
     code,
     message,
-    data,
-    token
+    data
   }
 }
 

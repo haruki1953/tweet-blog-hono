@@ -5,10 +5,13 @@ import { HTTPException } from 'hono/http-exception'
 import { type Hono } from 'hono'
 
 // handle error (call in services function on catch error)
-export const handleAppError = (error: any, message: string, statusCode?: StatusCode): void => {
+export const handleAppError = (
+  error: any, message: string, statusCode?: StatusCode, errorCode?: number
+): void => {
   if (error instanceof AppError) {
     error.message = `${message} | ${error.message}`
     if (statusCode !== undefined) error.statusCode = statusCode
+    if (errorCode !== undefined) error.errorCode = errorCode
     throw error
   } else {
     throw new AppError(`${message}`, statusCode)
@@ -20,7 +23,10 @@ export const handleGlobalError: Parameters<Hono['onError']>[0] = (error, c) => {
   // handle AppError
   if (error instanceof AppError) {
     c.status(error.statusCode ?? 500)
-    return c.json(handleResData(1, error.message))
+    return c.json(handleResData(
+      error.errorCode ?? 1,
+      error.message
+    ))
   }
 
   // handle HTTPException

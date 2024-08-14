@@ -7,6 +7,14 @@ import { AppError } from '@/classes'
 
 let store: null | AdminStore = null
 
+const loginControlStore: {
+  failCount: number
+  lockUntil: Date | null
+} = {
+  failCount: 0,
+  lockUntil: null
+}
+
 const filePath = systemAdminConfig.storeFile
 
 const init = () => {
@@ -18,6 +26,17 @@ const init = () => {
   }
 }
 
+const defaultStore = () => {
+  return {
+    username: systemAdminConfig.defaultUsername,
+    password: systemAdminConfig.defaultPassword,
+    jwtAdminSecretKey: generateRandomKey(),
+    jwtAdminExpSeconds: systemAdminConfig.defaultJwtAdminExpSeconds,
+    loginMaxFailCount: systemAdminConfig.defaultLoginMaxFailCount,
+    loginLockSeconds: systemAdminConfig.defaultLoginLockSeconds
+  }
+}
+
 // load data from file
 const load = () => {
   try {
@@ -25,12 +44,7 @@ const load = () => {
     const dataObj = JSON.parse(dataJson)
     store = typesAdminStoreSchema.parse(dataObj)
   } catch (error) {
-    store = {
-      username: 'admin',
-      password: '123456',
-      jwtMainSecretKey: generateRandomKey(),
-      jwtAdminSecretKey: generateRandomKey()
-    }
+    store = defaultStore()
     save()
   }
 }
@@ -46,6 +60,7 @@ export const useSetup = () => {
   return {
     // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style
     store: store as AdminStore,
+    loginControlStore,
     save
   }
 }
