@@ -14,8 +14,8 @@ model Post {
   id           Int      @id @default(autoincrement())
   createdAt    DateTime @default(now())
   addedAt      DateTime @default(now())
-  content      String?
-  isDeleted    Boolean  @default(false) // 表示是否在回收站中（软删除）
+  content      String
+  isDeleted    Boolean  @default(false)
   images       Image[]  @relation("PostImages")
   parentPost   Post?    @relation("PostReplies", fields: [parentPostId], references: [id])
   parentPostId Int?
@@ -27,10 +27,11 @@ model Post {
 model Image {
   id                    Int      @id @default(autoincrement())
   path                  String
-  addedAt               DateTime @default(now()) // 图片添加时间
-  smallSize             Int      @default(0) // small 版大小，0 代表没有
-  largeSize             Int      @default(0) // large 版大小，0 代表没有
-  originalSize          Int      @default(0) // 原图大小，0 代表没有
+  addedAt               DateTime @default(now())
+  smallSize             Int      @default(0)
+  largeSize             Int      @default(0)
+  originalSize          Int      @default(0)
+  originalPath          String?
   posts                 Post[]   @relation("PostImages")
-  twitterLargeImageLink String? // 图片的 Twitter 大图链接，可选
+  twitterLargeImageLink String?
 }

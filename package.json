@@ -8,11 +8,14 @@
     "@hono/zod-validator": "^0.2.2",
     "@prisma/client": "5.18.0",
     "hono": "^4.5.5",
+    "jimp": "0.22.12",
     "moment-timezone": "0.5.45",
+    "uuid": "9.0.1",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^20.11.17",
+    "@types/uuid": "9.0.1",
     "@typescript-eslint/eslint-plugin": "^6.4.0",
     "eslint": "^8.0.1",
     "eslint-config-standard-with-typescript": "^43.0.1",

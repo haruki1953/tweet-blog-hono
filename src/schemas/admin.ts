@@ -17,7 +17,11 @@ export const adminUpdateAuthJsonSchema = z.object({
 })
 
 export const adminUpdateInfoJsonSchema = z.object({
-  jwtAdminExpSeconds: z.number(),
-  loginMaxFailCount: z.number(),
-  loginLockSeconds: z.number()
+  jwtAdminExpSeconds: z.number().int().positive(),
+  loginMaxFailCount: z.number().int().positive(),
+  loginLockSeconds: z.number().int().positive()
 })
+
+// type AdminLoginJsonType = z.infer<typeof adminLoginJsonSchema>
+// type AdminUpdateAuthJsonType = z.infer<typeof adminUpdateAuthJsonSchema>
+// type adminUpdateInfoJsonType = z.infer<typeof adminUpdateInfoJsonSchema>

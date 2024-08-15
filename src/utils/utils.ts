@@ -41,3 +41,8 @@ export const strToNumber = async (str: string) => {
   }
   return num
 }
+
+export const randomIntPadStart2 = () => {
+  const randomInt = Math.floor(Math.random() * 100)
+  return randomInt.toString().padStart(2, '0')
+}

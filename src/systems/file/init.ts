@@ -1,35 +1,30 @@
 import fs from 'fs'
-import { systemAdminConfig, systemDataPath } from '@/configs'
-import type { AdminStore } from '@/types'
-import { typesAdminStoreSchema } from '@/schemas'
-import { confirmSaveFolderExists, generateRandomKey } from '@/utils'
 import { AppError } from '@/classes'
+import { systemDataPath, systemFileConfig } from '@/configs'
+import { type FileStore } from '@/types'
+import { confirmSaveFolderExists } from '@/utils'
+import { typesFileStoreSchema } from '@/schemas'
 
-let store: null | AdminStore = null
+let store: null | FileStore = null
 
-const loginControlStore: {
-  failCount: number
-  lockUntil: Date | null
-} = {
-  failCount: 0,
-  lockUntil: null
-}
-
-const filePath = systemAdminConfig.storeFile
+const filePath = systemFileConfig.storeFile
 
 const init = () => {
   try {
     confirmSaveFolderExists(systemDataPath)
+    confirmSaveFolderExists(systemFileConfig.imageSavePath)
+    confirmSaveFolderExists(systemFileConfig.originalImageSavePath)
+    confirmSaveFolderExists(systemFileConfig.largeImageSavePath)
+    confirmSaveFolderExists(systemFileConfig.smallImageSavePath)
     load()
   } catch (error) {
-    throw new AppError('admin系统初始化失败')
+    throw new AppError('file系统初始化失败')
   }
 }
 
 const defaultStore = () => {
   return {
-    ...systemAdminConfig.storeDefault,
-    jwtAdminSecretKey: generateRandomKey()
+    ...systemFileConfig.storeDefault
   }
 }
 
@@ -38,9 +33,9 @@ const load = () => {
   try {
     const dataJson = fs.readFileSync(filePath, 'utf8')
     const dataObj = JSON.parse(dataJson)
-    store = typesAdminStoreSchema.parse(dataObj)
+    store = typesFileStoreSchema.parse(dataObj)
   } catch (error) {
-    store = typesAdminStoreSchema.parse(defaultStore())
+    store = typesFileStoreSchema.parse(defaultStore())
     const data = JSON.stringify(store, null, 2)
     fs.writeFileSync(filePath, data, 'utf8')
   }
@@ -51,7 +46,7 @@ init()
 const save = () => {
   try {
     // to check before save data
-    typesAdminStoreSchema.parse(store)
+    typesFileStoreSchema.parse(store)
   } catch (error) {
     // save data is illegal, reset data
     const dataJson = fs.readFileSync(filePath, 'utf8')
@@ -61,7 +56,7 @@ const save = () => {
       // Obj"store" can't change, so assignment store's property one by one
       (store as any)[key] = dataObj[key]
     })
-    throw new AppError('AdminStore修改失败 | 数据不合法')
+    throw new AppError('FileStore修改失败 | 数据不合法')
   }
   const dataStr = JSON.stringify(store, null, 2)
   fs.writeFileSync(filePath, dataStr, 'utf8')
@@ -70,8 +65,7 @@ const save = () => {
 export const useSetup = () => {
   return {
     // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style
-    store: store as AdminStore,
-    loginControlStore,
+    store: store as FileStore,
     save
   }
 }

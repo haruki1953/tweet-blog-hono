@@ -38,6 +38,8 @@ export const handleGlobalError: Parameters<Hono['onError']>[0] = (error, c) => {
   }
 
   // unknown error
+  // throw error
+  console.log(error)
   c.status(500)
   return c.json(handleResData(1, `unknown error: ${error.message}`))
 }
