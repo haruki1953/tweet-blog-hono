@@ -5,3 +5,8 @@ if (Number.isNaN(httpPort)) {
   httpPort = 3000
 }
 export { httpPort }
+
+export const postConfig = {
+  postMaxImages: 4,
+  postNumInPage: 20
+}

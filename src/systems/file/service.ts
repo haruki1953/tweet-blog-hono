@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid'
 import path from 'path'
 import Jimp from 'jimp'
 import fs from 'fs'
+import fsp from 'fs/promises'
 
 import { confirmSaveFolderExists, getFileExtension, randomIntPadStart2 } from '@/utils'
 import { useSetup } from './init'
@@ -12,8 +13,8 @@ const setup = useSetup()
 
 export const getImageConfig = () => {
   return {
-    imageLargeArea: setup.store.imageLargeMaxLength,
-    imageSmallArea: setup.store.imageSmallMaxLength,
+    imageLargeMaxLength: setup.store.imageLargeMaxLength,
+    imageSmallMaxLength: setup.store.imageSmallMaxLength,
     imageQuality: setup.store.imageQuality
   }
 }
@@ -21,8 +22,8 @@ export const getImageConfig = () => {
 export const updateImageConfig = (
   info: ReturnType<typeof getImageConfig>
 ) => {
-  setup.store.imageLargeMaxLength = info.imageLargeArea
-  setup.store.imageSmallMaxLength = info.imageSmallArea
+  setup.store.imageLargeMaxLength = info.imageLargeMaxLength
+  setup.store.imageSmallMaxLength = info.imageSmallMaxLength
   setup.store.imageQuality = info.imageQuality
   setup.save()
 }
@@ -45,7 +46,7 @@ export const processImage = async (imageFile: File) => {
     intStr
   ))
 
-  const imageSaveName = `${intStr}/${nameUuid}.jpg`
+  const imageSaveName = `${intStr}/${nameUuid}${systemFileConfig.imageExtension}`
 
   const originalExtension = getFileExtension(imageFile.name)
   const originalSaveName = `${intStr}/${nameUuid}${originalExtension}`
@@ -103,16 +104,17 @@ export const processImage = async (imageFile: File) => {
   ) => {
     const clonedImage = inputImage.clone()
     await clonedImage.scale(scaleFactor).quality(imageQuality).writeAsync(savePathName)
-    const imgSize = fs.statSync(savePathName).size
+    let imgSize = fs.statSync(savePathName).size
     // if compressed image still big than original,
     // and originalExtension same as image, save original
     if (
       imgSize > originalSize &&
-      imageSaveName === originalSaveName
+      originalExtension === systemFileConfig.imageExtension
     ) {
       fs.writeFileSync(savePathName, imageBuffer)
+      imgSize = originalSize
     }
-    return originalSize
+    return imgSize
   }
   const saveSmallImg = async () => {
     smallSize = await saveImg(smallScaleFactor, imageSmallSavePathName)
@@ -148,5 +150,28 @@ export const processImage = async (imageFile: File) => {
     smallSize,
     largeSize,
     originalSize
+  }
+}
+
+export const deleteImage = (
+  imgPath: string, originalPath: string | null
+) => {
+  const imageLargeSavePathName = path.join(
+    systemFileConfig.largeImageSavePath,
+    imgPath
+  )
+  const imageSmallSavePathName = path.join(
+    systemFileConfig.smallImageSavePath,
+    imgPath
+  )
+  fsp.unlink(imageLargeSavePathName).catch(() => {})
+  fsp.unlink(imageSmallSavePathName).catch(() => {})
+
+  if (originalPath != null) {
+    const imageOriginalSavePathName = path.join(
+      systemFileConfig.originalImageSavePath,
+      originalPath
+    )
+    fsp.unlink(imageOriginalSavePathName).catch(() => {})
   }
 }
