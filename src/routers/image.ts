@@ -1,6 +1,6 @@
 import { AppError } from '@/classes'
-import { imageUpdateConfigJsonSchema, imageUpdateJsonSchema } from '@/schemas'
-import { imageGetConfigService, imageSendService, imageUpdateConfigService, imageUpdateService } from '@/services'
+import { imageDeleteOriginalParamSchema, imageDeleteParamSchema, imageUpdateConfigJsonSchema, imageUpdateJsonSchema } from '@/schemas'
+import { imageDeleteAllOriginalService, imageDeleteAllService, imageDeleteOriginalService, imageDeleteService, imageGetConfigService, imageSendService, imageUpdateConfigService, imageUpdateService } from '@/services'
 import { useAdminSystem } from '@/systems'
 import { type UserJwtVariables } from '@/types'
 import { handleImageInFromData, handleResData, zValWEH } from '@/utils'
@@ -60,6 +60,46 @@ router.put(
 
     c.status(200)
     return c.json(handleResData(0, '修改成功'))
+  }
+)
+
+router.delete(
+  '/id/:id',
+  zValWEH('param', imageDeleteParamSchema),
+  async (c) => {
+    const { id } = c.req.valid('param')
+    const data = await imageDeleteService(id)
+    c.status(200)
+    return c.json(handleResData(0, '删除成功', data))
+  }
+)
+
+router.delete(
+  '/all',
+  async (c) => {
+    const data = await imageDeleteAllService()
+    c.status(200)
+    return c.json(handleResData(0, '删除成功', data))
+  }
+)
+
+router.delete(
+  '/original/id/:id',
+  zValWEH('param', imageDeleteOriginalParamSchema),
+  async (c) => {
+    const { id } = c.req.valid('param')
+    const data = await imageDeleteOriginalService(id)
+    c.status(200)
+    return c.json(handleResData(0, '删除成功', data))
+  }
+)
+
+router.delete(
+  '/original/all',
+  async (c) => {
+    const data = await imageDeleteAllOriginalService()
+    c.status(200)
+    return c.json(handleResData(0, '删除成功', data))
   }
 )
 

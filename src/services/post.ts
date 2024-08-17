@@ -1,7 +1,8 @@
 import { AppError } from '@/classes'
-import { type PostUpdateJsonType, type PostSendJsonType } from '@/schemas'
+import { type PostUpdateJsonType, type PostSendJsonType, type PostGetByCursorQueryType } from '@/schemas'
 import { prisma } from '@/systems'
-import { deleteImageByIdOnNoPost } from './base'
+import { deleteImageByIdWhereNonePost } from './base'
+import { postConfig } from '@/configs'
 
 export const postSendService = async (postInfo: PostSendJsonType) => {
   const post = await prisma.post.create({
@@ -90,7 +91,6 @@ export const postDeleteService = async (id: number) => {
     where: { id, isDeleted: true },
     include: { images: true }
   }).catch((error) => {
-    console.log(error.code)
     if (error.code === 'P2025') {
       throw new AppError('帖子不在回收站中', 400)
     }
@@ -98,7 +98,7 @@ export const postDeleteService = async (id: number) => {
   })
 
   const imgDelPromises = post.images.map(async (img) => {
-    return await deleteImageByIdOnNoPost(img.id)
+    return await deleteImageByIdWhereNonePost(img.id).catch(() => null)
   })
 
   return {
@@ -112,10 +112,6 @@ export const postDeleteAllService = async () => {
     where: { isDeleted: true },
     select: { id: true }
   })
-  // const postDelPromises = posts.map(async (p) => {
-  //   return await postDeleteService(p.id)
-  // })
-  // return await Promise.all(postDelPromises)
 
   // del one by one, to avert unexpected error
   const results = []
@@ -124,4 +120,83 @@ export const postDeleteAllService = async () => {
     results.push(result)
   }
   return results
+}
+
+const postIncludeBase = {
+  images: true,
+  _count: {
+    select: {
+      replies: {
+        where: { isDeleted: false }
+      }
+    }
+  }
+}
+
+export const postGetByIdService = async (id: number) => {
+  const post = await prisma.post.findUnique({
+    where: { id, isDeleted: false },
+    include: {
+      ...postIncludeBase,
+      parentPost: {
+        where: { isDeleted: false },
+        include: {
+          ...postIncludeBase
+        }
+      },
+      replies: {
+        where: { isDeleted: false },
+        include: {
+          ...postIncludeBase,
+          replies: {
+            where: { isDeleted: false },
+            include: {
+              ...postIncludeBase
+            }
+          }
+        }
+      }
+    }
+  })
+  if (post == null) {
+    throw new AppError('帖子不存在', 400)
+  }
+  return post
+}
+
+export const postGetByCursorService = async (
+  cursorId: number, query: PostGetByCursorQueryType
+) => {
+  const posts = await prisma.post.findMany({
+    take: postConfig.postNumInPage,
+    skip: (
+      cursorId === 0
+        ? undefined
+        : 1
+    ),
+    cursor: (
+      cursorId === 0
+        ? undefined
+        : { id: cursorId }
+    ),
+    where: {
+      isDeleted: false,
+      content: (
+        query.content === undefined
+          ? undefined
+          : { contains: query.content }
+      )
+    },
+    orderBy: { createdAt: 'desc' },
+    include: {
+      ...postIncludeBase,
+      parentPost: {
+        where: { isDeleted: false },
+        include: {
+          ...postIncludeBase
+        }
+      }
+    }
+  })
+  return posts
 }

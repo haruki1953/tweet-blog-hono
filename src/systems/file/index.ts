@@ -1,5 +1,12 @@
 import { useSetup } from './init'
-import { deleteImage, getImageConfig, processImage, updateImageConfig } from './service'
+import {
+  deleteAllOriginalImage,
+  deleteImage,
+  deleteOriginalImage,
+  getImageConfig,
+  processImage,
+  updateImageConfig
+} from './service'
 
 useSetup()
 
@@ -8,6 +15,8 @@ export const useImageSystem = () => {
     getImageConfig,
     updateImageConfig,
     processImage,
-    deleteImage
+    deleteImage,
+    deleteOriginalImage,
+    deleteAllOriginalImage
   }
 }

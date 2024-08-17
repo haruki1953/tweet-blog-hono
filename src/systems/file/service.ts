@@ -175,3 +175,27 @@ export const deleteImage = (
     fsp.unlink(imageOriginalSavePathName).catch(() => {})
   }
 }
+
+export const deleteOriginalImage = (
+  originalPath: string | null
+) => {
+  if (originalPath != null) {
+    const imageOriginalSavePathName = path.join(
+      systemFileConfig.originalImageSavePath,
+      originalPath
+    )
+    fsp.unlink(imageOriginalSavePathName).catch(() => {})
+  }
+}
+
+export const deleteAllOriginalImage = async () => {
+  // direct delete directory
+  await fsp.rm(
+    systemFileConfig.originalImageSavePath,
+    { recursive: true, force: true }
+  )
+  // again create original directory
+  confirmSaveFolderExists(
+    systemFileConfig.originalImageSavePath
+  )
+}

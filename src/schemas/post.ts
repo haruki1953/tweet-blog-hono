@@ -14,16 +14,28 @@ export const postSendJsonSchema = z.object({
   twitterLink: z.string().nullable().optional(),
   isDeleted: z.boolean().optional()
 })
-
 export type PostSendJsonType = z.infer<typeof postSendJsonSchema>
 
 export const postUpdateJsonSchema = postSendJsonSchema.extend({ id })
-
 export type PostUpdateJsonType = z.infer<typeof postUpdateJsonSchema>
 
 export const postDeleteParamSchema = z.object({
   // Coercion for primitives
   id: z.coerce.number().int().positive()
 })
-
 export type PostDeleteParamType = z.infer<typeof postDeleteParamSchema>
+
+export const postGetByIdParamSchema = z.object({
+  id: z.coerce.number().int().positive()
+})
+export type PostGetByIdParamType = z.infer<typeof postGetByIdParamSchema>
+
+export const postGetByCursorParamSchma = z.object({
+  id: z.coerce.number().int().nonnegative()
+})
+export type PostGetByCursorParamType = z.infer<typeof postGetByCursorParamSchma>
+
+export const postGetByCursorQuerySchma = z.object({
+  content: z.string().optional()
+})
+export type PostGetByCursorQueryType = z.infer<typeof postGetByCursorQuerySchma>

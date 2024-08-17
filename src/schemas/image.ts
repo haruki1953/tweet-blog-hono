@@ -15,3 +15,15 @@ export const imageUpdateConfigJsonSchema = z.object({
 })
 
 export type ImageUpdateConfigJsonType = z.infer<typeof imageUpdateConfigJsonSchema>
+
+export const imageDeleteParamSchema = z.object({
+  id: z.coerce.number().int().positive()
+})
+
+export type ImageDeleteParamType = z.infer<typeof imageDeleteParamSchema>
+
+export const imageDeleteOriginalParamSchema = z.object({
+  id: z.coerce.number().int().positive()
+})
+
+export type ImageDeleteOriginalParamType = z.infer<typeof imageDeleteOriginalParamSchema>

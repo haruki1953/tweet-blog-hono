@@ -16,31 +16,17 @@ export const generateTokenAdmin = async (
   return token
 }
 
-export const deleteImageById = async (id: number) => {
+export const deleteImageByIdWhereNonePost = async (id: number) => {
   // in table, delete image
   const img = await prisma.image.delete({
-    where: { id }
-  }).catch(() => {
+    where: { id, posts: { none: {} } }
+  }).catch((error) => {
+    if (error.code === 'P2025') {
+      throw new AppError('图片被引用中，或图片id不存在', 400)
+    }
     throw new AppError('图片删除失败')
   })
   // in file, delete image
   imageSystem.deleteImage(img.path, img.originalPath)
   return img
-}
-
-export const deleteImageByIdOnNoPost = async (id: number) => {
-  const img = await prisma.image.findUnique({
-    where: { id },
-    include: {
-      _count: { select: { posts: true } }
-    }
-  })
-  if (img == null) {
-    throw new AppError('图片不存在')
-  }
-  if (img._count.posts === 0) {
-    return await deleteImageById(id)
-  } else {
-    return null
-  }
 }
