@@ -1,6 +1,6 @@
 import { AppError } from '@/classes'
-import { imageDeleteOriginalParamSchema, imageDeleteParamSchema, imageUpdateConfigJsonSchema, imageUpdateJsonSchema } from '@/schemas'
-import { imageDeleteAllOriginalService, imageDeleteAllService, imageDeleteOriginalService, imageDeleteService, imageGetConfigService, imageSendService, imageUpdateConfigService, imageUpdateService } from '@/services'
+import { imageDeleteOriginalParamSchema, imageDeleteParamSchema, imageGetByCursorParamSchema, imageGetByCursorQuerySchema, imageGetByIdParamSchema, imageUpdateConfigJsonSchema, imageUpdateJsonSchema } from '@/schemas'
+import { imageDeleteAllOriginalService, imageDeleteAllService, imageDeleteOriginalService, imageDeleteService, imageGetByCursorService, imageGetByIdService, imageGetConfigService, imageSendService, imageUpdateConfigService, imageUpdateService } from '@/services'
 import { useAdminSystem } from '@/systems'
 import { type UserJwtVariables } from '@/types'
 import { handleImageInFromData, handleResData, zValWEH } from '@/utils'
@@ -100,6 +100,31 @@ router.delete(
     const data = await imageDeleteAllOriginalService()
     c.status(200)
     return c.json(handleResData(0, '删除成功', data))
+  }
+)
+
+router.get(
+  '/id/:id',
+  zValWEH('param', imageGetByIdParamSchema),
+  async (c) => {
+    const { id } = c.req.valid('param')
+    const data = await imageGetByIdService(id)
+    c.status(200)
+    return c.json(handleResData(0, '获取成功', data))
+  }
+)
+
+router.get(
+  '/cursor/:id',
+  zValWEH('param', imageGetByCursorParamSchema),
+  zValWEH('query', imageGetByCursorQuerySchema),
+  async (c) => {
+    const { id } = c.req.valid('param')
+    const query = c.req.valid('query')
+
+    const data = await imageGetByCursorService(id, query)
+    c.status(200)
+    return c.json(handleResData(0, '获取成功', data))
   }
 )
 

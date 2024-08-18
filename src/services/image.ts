@@ -1,7 +1,8 @@
 import { AppError } from '@/classes'
-import { type ImageUpdateConfigJsonType, type ImageUpdateJsonType } from '@/schemas'
+import { type ImageGetByCursorQueryType, type ImageUpdateConfigJsonType, type ImageUpdateJsonType } from '@/schemas'
 import { prisma, useImageSystem } from '@/systems'
 import { deleteImageByIdWhereNonePost } from './base'
+import { postConfig } from '@/configs'
 
 const imageSystem = useImageSystem()
 
@@ -112,4 +113,71 @@ export const imageDeleteAllOriginalService = async () => {
   // del file
   await imageSystem.deleteAllOriginalImage()
   return imgOriginalDelCount.count
+}
+
+const imageIncludeOnGet = {
+  _count: {
+    select: { posts: true }
+  },
+  posts: {
+    include: {
+      _count: {
+        select: {
+          images: true,
+          replies: true
+        }
+      }
+    }
+  }
+}
+
+export const imageGetByIdService = async (id: number) => {
+  const image = await prisma.image.findUnique({
+    where: { id },
+    include: { ...imageIncludeOnGet }
+  })
+  if (image == null) {
+    throw new AppError('图片不存在', 400)
+  }
+  return image
+}
+
+export const imageGetByCursorService = async (
+  cursorId: number, query: ImageGetByCursorQueryType
+) => {
+  // when cursorId is 0, it's first,
+  // skip must be undefined, and cursor is undefined
+  const skip = cursorId === 0 ? undefined : 1
+  const cursor = cursorId === 0 ? undefined : { id: cursorId }
+
+  let posts
+  if (query.havePost === 'true') {
+    posts = { some: {} }
+  } else if (query.havePost === 'false') {
+    posts = { none: {} }
+  } else { // 'all' | undefined
+    posts = undefined
+  }
+
+  let originalSize
+  if (query.haveOriginal === 'true') {
+    originalSize = { not: 0 }
+  } else if (query.haveOriginal === 'false') {
+    originalSize = { equals: 0 }
+  } else { // 'all' | undefined
+    originalSize = undefined
+  }
+
+  const images = await prisma.image.findMany({
+    take: postConfig.imageNumInPage,
+    skip,
+    cursor,
+    where: {
+      posts,
+      originalSize
+    },
+    orderBy: { addedAt: 'desc' },
+    include: { ...imageIncludeOnGet }
+  })
+  return images
 }

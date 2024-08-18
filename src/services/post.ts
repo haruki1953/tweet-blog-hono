@@ -1,5 +1,5 @@
 import { AppError } from '@/classes'
-import { type PostUpdateJsonType, type PostSendJsonType, type PostGetByCursorQueryType } from '@/schemas'
+import { type PostUpdateJsonType, type PostSendJsonType, type PostGetByCursorQueryType, type PostGetByIdQueryType } from '@/schemas'
 import { prisma } from '@/systems'
 import { deleteImageByIdWhereNonePost } from './base'
 import { postConfig } from '@/configs'
@@ -133,23 +133,36 @@ const postIncludeBase = {
   }
 }
 
-export const postGetByIdService = async (id: number) => {
+export const postGetByIdService = async (
+  id: number, query: PostGetByIdQueryType
+) => {
+  let isDelWhereVal: false | undefined
+  if (
+    query.keepIsDetele === undefined ||
+    // eslint-disable-next-line @typescript-eslint/quotes
+    query.keepIsDetele === "false"
+  ) {
+    isDelWhereVal = false
+  } else { // true
+    isDelWhereVal = undefined
+  }
+
   const post = await prisma.post.findUnique({
-    where: { id, isDeleted: false },
+    where: { id, isDeleted: isDelWhereVal },
     include: {
       ...postIncludeBase,
       parentPost: {
-        where: { isDeleted: false },
+        where: { isDeleted: isDelWhereVal },
         include: {
           ...postIncludeBase
         }
       },
       replies: {
-        where: { isDeleted: false },
+        where: { isDeleted: isDelWhereVal },
         include: {
           ...postIncludeBase,
           replies: {
-            where: { isDeleted: false },
+            where: { isDeleted: isDelWhereVal },
             include: {
               ...postIncludeBase
             }
@@ -167,31 +180,43 @@ export const postGetByIdService = async (id: number) => {
 export const postGetByCursorService = async (
   cursorId: number, query: PostGetByCursorQueryType
 ) => {
+  // when cursorId is 0, it's first,
+  // skip must be undefined, and cursor is undefined
+  const skip = cursorId === 0 ? undefined : 1
+  const cursor = cursorId === 0 ? undefined : { id: cursorId }
+
+  // when have content, filtering contains
+  const content = (
+    query.content === undefined
+      ? undefined
+      : { contains: query.content }
+  )
+
+  let isDeleted: boolean | undefined
+  if (
+    query.isDelete === 'false' ||
+    query.isDelete === undefined
+  ) {
+    isDeleted = false
+  } else if (query.isDelete === 'true') {
+    isDeleted = true
+  } else { // 'all'
+    isDeleted = undefined
+  }
+
   const posts = await prisma.post.findMany({
     take: postConfig.postNumInPage,
-    skip: (
-      cursorId === 0
-        ? undefined
-        : 1
-    ),
-    cursor: (
-      cursorId === 0
-        ? undefined
-        : { id: cursorId }
-    ),
+    skip,
+    cursor,
     where: {
-      isDeleted: false,
-      content: (
-        query.content === undefined
-          ? undefined
-          : { contains: query.content }
-      )
+      isDeleted,
+      content
     },
     orderBy: { createdAt: 'desc' },
     include: {
       ...postIncludeBase,
       parentPost: {
-        where: { isDeleted: false },
+        where: { isDeleted },
         include: {
           ...postIncludeBase
         }

@@ -8,5 +8,6 @@ export { httpPort }
 
 export const postConfig = {
   postMaxImages: 4,
-  postNumInPage: 20
+  postNumInPage: 20,
+  imageNumInPage: 20
 }

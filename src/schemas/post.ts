@@ -1,5 +1,6 @@
 import { postConfig } from '@/configs'
 import { z } from 'zod'
+import { type IdParamType, idParamSchema } from './base'
 
 const id = z.number().int().positive()
 
@@ -19,16 +20,16 @@ export type PostSendJsonType = z.infer<typeof postSendJsonSchema>
 export const postUpdateJsonSchema = postSendJsonSchema.extend({ id })
 export type PostUpdateJsonType = z.infer<typeof postUpdateJsonSchema>
 
-export const postDeleteParamSchema = z.object({
-  // Coercion for primitives
-  id: z.coerce.number().int().positive()
-})
-export type PostDeleteParamType = z.infer<typeof postDeleteParamSchema>
+export const postDeleteParamSchema = idParamSchema
+export type PostDeleteParamType = IdParamType
 
-export const postGetByIdParamSchema = z.object({
-  id: z.coerce.number().int().positive()
+export const postGetByIdParamSchema = idParamSchema
+export type PostGetByIdParamType = IdParamType
+
+export const postGetByIdQuerySchma = z.object({
+  keepIsDetele: z.enum(['true', 'false']).optional()
 })
-export type PostGetByIdParamType = z.infer<typeof postGetByIdParamSchema>
+export type PostGetByIdQueryType = z.infer<typeof postGetByIdQuerySchma>
 
 export const postGetByCursorParamSchma = z.object({
   id: z.coerce.number().int().nonnegative()
@@ -36,6 +37,10 @@ export const postGetByCursorParamSchma = z.object({
 export type PostGetByCursorParamType = z.infer<typeof postGetByCursorParamSchma>
 
 export const postGetByCursorQuerySchma = z.object({
-  content: z.string().optional()
+  content: z.string().optional(),
+  isDelete: z.enum(['true', 'false', 'all']).optional()
 })
 export type PostGetByCursorQueryType = z.infer<typeof postGetByCursorQuerySchma>
+
+export const postGetIsdelParamSchma = idParamSchema
+export type PostGetIsdelParamType = IdParamType
