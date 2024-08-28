@@ -4,6 +4,17 @@ import { prisma } from '@/systems'
 import { deleteImageByIdWhereNonePost } from './base'
 import { postConfig } from '@/configs'
 
+const postIncludeBase = {
+  images: true,
+  _count: {
+    select: {
+      replies: {
+        where: { isDeleted: false }
+      }
+    }
+  }
+}
+
 export const postSendService = async (postInfo: PostSendJsonType) => {
   const post = await prisma.post.create({
     data: {
@@ -30,8 +41,7 @@ export const postSendService = async (postInfo: PostSendJsonType) => {
       isDeleted: postInfo.isDeleted
     },
     include: {
-      parentPost: true,
-      images: true
+      ...postIncludeBase
     }
   }).catch((error) => {
     if (error.code === 'P2025') {
@@ -120,17 +130,6 @@ export const postDeleteAllService = async () => {
     results.push(result)
   }
   return results
-}
-
-const postIncludeBase = {
-  images: true,
-  _count: {
-    select: {
-      replies: {
-        where: { isDeleted: false }
-      }
-    }
-  }
 }
 
 export const postGetByIdService = async (
