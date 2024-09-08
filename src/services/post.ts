@@ -53,6 +53,9 @@ export const postSendService = async (postInfo: PostSendJsonType) => {
 }
 
 export const postUpdateService = async (postInfo: PostUpdateJsonType) => {
+  if (postInfo.id === postInfo.parentPostId) {
+    throw new AppError('parentPostId 不能为当前帖子 id', 400)
+  }
   const post = await prisma.post.update({
     where: { id: postInfo.id },
     data: {

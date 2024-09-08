@@ -8,7 +8,7 @@ export const postSendJsonSchema = z.object({
   content: z.string().optional(),
   images: z.array(id).max(postConfig.postMaxImages).optional(),
   createdAt: z.coerce.date()
-    .min(new Date('1900-01-01'), { message: 'Too old' })
+    .min(new Date('1971-01-01'), { message: 'Too old' })
     .optional(),
   parentPostId: id.nullable().optional(),
   twitterId: z.string().nullable().optional(),

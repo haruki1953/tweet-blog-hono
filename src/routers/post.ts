@@ -64,7 +64,6 @@ router.get(
   async (c) => {
     const { id } = c.req.valid('param')
     const query = c.req.valid('query')
-    console.log(query)
 
     const data: PostGetByIdData = await postGetByIdService(id, query)
     c.status(200)
@@ -79,7 +78,6 @@ router.get(
   async (c) => {
     const { id } = c.req.valid('param')
     const query = c.req.valid('query')
-    console.log(query)
 
     const data: PostGetByCursorData = await postGetByCursorService(id, query)
     c.status(200)
