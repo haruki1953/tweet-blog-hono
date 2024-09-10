@@ -1,4 +1,4 @@
-import { postDeleteParamSchema, postGetByCursorParamSchma, postGetByCursorQuerySchma, postGetByIdParamSchema, postGetByIdQuerySchma, postSendJsonSchema, postUpdateJsonSchema } from '@/schemas'
+import { postDeleteAllQuerySchema, postDeleteParamSchema, postDeleteQuerySchema, postGetByCursorParamSchma, postGetByCursorQuerySchma, postGetByIdParamSchema, postGetByIdQuerySchma, postSendJsonSchema, postUpdateJsonSchema } from '@/schemas'
 import { postDeleteAllService, postDeleteService, postGetByCursorService, postGetByIdService, postSendService, postUpdateService } from '@/services'
 import { useAdminSystem } from '@/systems'
 import { type PostGetByCursorData, type PostGetByIdData, type UserJwtVariables } from '@/types'
@@ -40,9 +40,11 @@ router.put(
 router.delete(
   '/id/:id',
   zValWEH('param', postDeleteParamSchema),
+  zValWEH('query', postDeleteQuerySchema),
   async (c) => {
     const { id } = c.req.valid('param')
-    const data = await postDeleteService(id)
+    const query = c.req.valid('query')
+    const data = await postDeleteService(id, query)
     c.status(200)
     return c.json(handleResData(0, '删除成功', data))
   }
@@ -50,8 +52,10 @@ router.delete(
 
 router.delete(
   '/all',
+  zValWEH('query', postDeleteAllQuerySchema),
   async (c) => {
-    const data = await postDeleteAllService()
+    const query = c.req.valid('query')
+    const data = await postDeleteAllService(query)
     c.status(200)
     return c.json(handleResData(0, '删除成功', data))
   }

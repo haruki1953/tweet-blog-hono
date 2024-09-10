@@ -1,8 +1,16 @@
 import { AppError } from '@/classes'
-import { type PostUpdateJsonType, type PostSendJsonType, type PostGetByCursorQueryType, type PostGetByIdQueryType } from '@/schemas'
+import {
+  type PostUpdateJsonType,
+  type PostSendJsonType,
+  type PostGetByCursorQueryType,
+  type PostGetByIdQueryType,
+  type PostDeleteAllQueryType,
+  type PostDeleteQueryType
+} from '@/schemas'
 import { prisma } from '@/systems'
 import { deleteImageByIdWhereNonePost } from './base'
 import { postConfig } from '@/configs'
+import { type PromiseReturnType } from '@prisma/client/extension'
 
 const postIncludeBase = {
   images: true,
@@ -98,7 +106,7 @@ export const postUpdateService = async (postInfo: PostUpdateJsonType) => {
   return post
 }
 
-export const postDeleteService = async (id: number) => {
+export const postDeleteService = async (id: number, query: PostDeleteQueryType) => {
   // can direct delete post, prisma can auto manage relation (images)
   const post = await prisma.post.delete({
     where: { id, isDeleted: true },
@@ -110,17 +118,24 @@ export const postDeleteService = async (id: number) => {
     throw new AppError('帖子删除失败')
   })
 
-  const imgDelPromises = post.images.map(async (img) => {
-    return await deleteImageByIdWhereNonePost(img.id).catch(() => null)
-  })
+  const tryDeleteImages = async () => {
+    const imgDelPromises = post.images.map(async (img) => {
+      return await deleteImageByIdWhereNonePost(img.id).catch(() => null)
+    })
+    return await Promise.all(imgDelPromises)
+  }
+  let deletedImages: PromiseReturnType<typeof tryDeleteImages> = []
+  if (query.delateImage === 'true') {
+    deletedImages = await tryDeleteImages()
+  }
 
   return {
     deletedPost: post,
-    deletedImages: await Promise.all(imgDelPromises)
+    deletedImages
   }
 }
 
-export const postDeleteAllService = async () => {
+export const postDeleteAllService = async (query: PostDeleteAllQueryType) => {
   const posts = await prisma.post.findMany({
     where: { isDeleted: true },
     select: { id: true }
@@ -129,7 +144,7 @@ export const postDeleteAllService = async () => {
   // del one by one, to avert unexpected error
   const results = []
   for (const p of posts) {
-    const result = await postDeleteService(p.id)
+    const result = await postDeleteService(p.id, query)
     results.push(result)
   }
   return results

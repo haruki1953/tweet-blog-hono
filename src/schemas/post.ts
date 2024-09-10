@@ -23,6 +23,14 @@ export type PostUpdateJsonType = z.infer<typeof postUpdateJsonSchema>
 export const postDeleteParamSchema = idParamSchema
 export type PostDeleteParamType = IdParamType
 
+export const postDeleteQuerySchema = z.object({
+  delateImage: z.enum(['true', 'false']).optional()
+})
+export type PostDeleteQueryType = z.infer<typeof postDeleteQuerySchema>
+
+export const postDeleteAllQuerySchema = postDeleteQuerySchema
+export type PostDeleteAllQueryType = z.infer<typeof postDeleteAllQuerySchema>
+
 export const postGetByIdParamSchema = idParamSchema
 export type PostGetByIdParamType = IdParamType
 
