@@ -83,7 +83,7 @@ export const imageDeleteOriginalService = async (id: number) => {
     throw new AppError('imageId不存在')
   }
   // first update database
-  await prisma.image.update({
+  const updatedImage = await prisma.image.update({
     where: { id },
     data: {
       originalSize: 0,
@@ -94,7 +94,7 @@ export const imageDeleteOriginalService = async (id: number) => {
   })
   // delete file
   imageSystem.deleteOriginalImage(image.originalPath)
-  return image
+  return updatedImage
 }
 
 export const imageDeleteAllOriginalService = async () => {
