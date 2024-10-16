@@ -28,6 +28,13 @@ export const postSendService = async (postInfo: PostSendJsonType) => {
     data: {
       content: postInfo.content ?? '',
       createdAt: postInfo.createdAt,
+      imagesOrder: (
+        postInfo.images === undefined
+          ? undefined
+          : (
+              JSON.stringify(postInfo.images)
+            )
+      ),
       images: (
         postInfo.images === undefined
           ? undefined
@@ -69,6 +76,13 @@ export const postUpdateService = async (postInfo: PostUpdateJsonType) => {
     data: {
       content: postInfo.content,
       createdAt: postInfo.createdAt,
+      imagesOrder: (
+        postInfo.images === undefined
+          ? undefined
+          : (
+              JSON.stringify(postInfo.images)
+            )
+      ),
       images: (
         postInfo.images === undefined
           ? undefined
