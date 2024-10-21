@@ -15,6 +15,7 @@ export interface Post {
   twitterId: string | null
   twitterLink: string | null
   images: Image[]
+  imagesOrder: string | null
   _count: {
     replies: number
   }

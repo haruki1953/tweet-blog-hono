@@ -217,10 +217,23 @@ export const postGetByCursorService = async (
   const cursor = cursorId === 0 ? undefined : { id: cursorId }
 
   // when have content, filtering contains
-  const content = (
+  const OR = (
     query.content === undefined
       ? undefined
-      : { contains: query.content }
+      : [
+          {
+            content: { contains: query.content }
+          },
+          {
+            images: {
+              some: {
+                alt: {
+                  contains: query.content
+                }
+              }
+            }
+          }
+        ]
   )
 
   let isDeleted: boolean | undefined
@@ -241,7 +254,7 @@ export const postGetByCursorService = async (
     cursor,
     where: {
       isDeleted,
-      content
+      OR
     },
     orderBy: { createdAt: 'desc' },
     include: {
