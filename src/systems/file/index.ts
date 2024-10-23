@@ -1,4 +1,4 @@
-import { useSetup } from './init'
+import './init'
 import {
   deleteAllOriginalImage,
   deleteImage,
@@ -6,9 +6,7 @@ import {
   getImageConfig,
   processImage,
   updateImageConfig
-} from './service'
-
-useSetup()
+} from './services'
 
 export const useImageSystem = () => {
   return {

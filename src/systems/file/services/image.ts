@@ -5,27 +5,22 @@ import fs from 'fs'
 import fsp from 'fs/promises'
 
 import { confirmSaveFolderExists, getFileExtension, randomIntPadStart2 } from '@/utils'
-import { useSetup } from './init'
+import { store, save } from '../init'
 import { systemFileConfig } from '@/configs'
 import { AppError } from '@/classes'
 
-const setup = useSetup()
-
 export const getImageConfig = () => {
   return {
-    imageLargeMaxLength: setup.store.imageLargeMaxLength,
-    imageSmallMaxLength: setup.store.imageSmallMaxLength,
-    imageQuality: setup.store.imageQuality
+    imageLargeMaxLength: store.imageLargeMaxLength,
+    imageSmallMaxLength: store.imageSmallMaxLength,
+    imageQuality: store.imageQuality
   }
 }
 
 export const updateImageConfig = (
   info: ReturnType<typeof getImageConfig>
 ) => {
-  setup.store.imageLargeMaxLength = info.imageLargeMaxLength
-  setup.store.imageSmallMaxLength = info.imageSmallMaxLength
-  setup.store.imageQuality = info.imageQuality
-  setup.save()
+  save(info)
 }
 
 export const processImage = async (imageFile: File) => {
@@ -68,7 +63,7 @@ export const processImage = async (imageFile: File) => {
     imageLargeMaxLength,
     imageSmallMaxLength,
     imageQuality
-  } = setup.store
+  } = store
 
   const inputImage = await Jimp.read(imageBuffer).catch(() => {
     throw new AppError('此图片无法处理')

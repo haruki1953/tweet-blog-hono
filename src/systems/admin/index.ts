@@ -1,4 +1,4 @@
-import { useSetup } from './init'
+import './init'
 import {
   confirmAuth,
   updateAuth,
@@ -7,9 +7,7 @@ import {
   getJwtAdminSecretKey,
   getAdminInfo,
   updateAdminInfo
-} from './srevices'
-
-useSetup()
+} from './services'
 
 export const useAdminSystem = () => {
   return {

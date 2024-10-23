@@ -8,8 +8,8 @@ export const systemAdminConfig = {
     username: 'admin',
     password: 'adminadmin',
     jwtAdminExpSeconds: 100 * 24 * 60 * 60, // Token expires in 100 days
-    defaultLoginMaxFailCount: 10,
-    defaultLoginLockSeconds: 1 * 60 * 60 // 1hour
+    loginMaxFailCount: 10,
+    loginLockSeconds: 1 * 60 * 60 // 1hour
   }
 }
 
