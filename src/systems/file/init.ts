@@ -2,7 +2,7 @@ import { AppError } from '@/classes'
 import { systemDataPath, systemFileConfig } from '@/configs'
 import { confirmSaveFolderExists } from '@/utils'
 import { typesFileStoreSchema } from '@/schemas'
-import { defineStoreSystem } from '@/helpers/system'
+import { defineStoreSystem } from '@/helpers'
 
 try {
   confirmSaveFolderExists(systemDataPath)

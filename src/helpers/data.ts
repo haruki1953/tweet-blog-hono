@@ -31,9 +31,3 @@ export const handleImageInFromData = (
   }
   return file
 }
-
-export const getFileExtension = (filename: string) => {
-  // 使用正则表达式匹配文件名中的后缀名
-  const match = filename.match(/(\.[a-zA-Z0-9]+)$/)
-  return (match != null) ? match[1] : ''
-}

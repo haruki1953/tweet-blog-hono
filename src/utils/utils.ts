@@ -46,3 +46,9 @@ export const randomIntPadStart2 = () => {
   const randomInt = Math.floor(Math.random() * 100)
   return randomInt.toString().padStart(2, '0')
 }
+
+export const getFileExtension = (filename: string) => {
+  // 使用正则表达式匹配文件名中的后缀名
+  const match = filename.match(/(\.[a-zA-Z0-9]+)$/)
+  return (match != null) ? match[1] : ''
+}

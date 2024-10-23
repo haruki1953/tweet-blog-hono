@@ -4,7 +4,7 @@ import { cors } from 'hono/cors'
 
 import { httpPort } from './configs'
 import { adminRouter, imageRouter, postRouter, publicRouter } from './routers'
-import { handleGlobalError, handleResData } from './utils'
+import { handleGlobalError, handleResData } from './helpers'
 
 const app = new Hono()
 

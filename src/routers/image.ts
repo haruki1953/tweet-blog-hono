@@ -3,7 +3,7 @@ import { imageDeleteOriginalParamSchema, imageDeleteParamSchema, imageGetByCurso
 import { imageDeleteAllOriginalService, imageDeleteAllService, imageDeleteOriginalService, imageDeleteService, imageGetByCursorService, imageGetByIdService, imageGetConfigService, imageSendService, imageUpdateConfigService, imageUpdateService } from '@/services'
 import { useAdminSystem } from '@/systems'
 import { type UserJwtVariables } from '@/types'
-import { handleImageInFromData, handleResData, zValWEH } from '@/utils'
+import { handleImageInFromData, handleResData, zValWEH } from '@/helpers'
 import { Hono } from 'hono'
 import { jwt } from 'hono/jwt'
 

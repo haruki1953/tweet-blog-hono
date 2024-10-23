@@ -2,7 +2,7 @@ import { adminUpdateAuthJsonSchema, adminUpdateInfoJsonSchema } from '@/schemas'
 import { adminGetInfoService, adminUpdateAuthService, adminUpdateInfoService } from '@/services'
 import { useAdminSystem } from '@/systems'
 import { type UserJwtVariables } from '@/types'
-import { handleResData, zValWEH } from '@/utils'
+import { handleResData, zValWEH } from '@/helpers'
 import { Hono } from 'hono'
 import { jwt } from 'hono/jwt'
 

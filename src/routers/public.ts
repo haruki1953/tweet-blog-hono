@@ -1,6 +1,6 @@
 import { adminLoginJsonSchema } from '@/schemas'
 import { adminLoginService } from '@/services'
-import { handleResData, zValWEH } from '@/utils'
+import { handleResData, zValWEH } from '@/helpers'
 import { Hono } from 'hono'
 
 const router = new Hono()

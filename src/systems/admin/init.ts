@@ -1,7 +1,7 @@
 import { systemAdminConfig } from '@/configs'
 import { typesAdminStoreSchema } from '@/schemas'
 import { generateRandomKey } from '@/utils'
-import { defineStoreSystem } from '@/helpers/system'
+import { defineStoreSystem } from '@/helpers'
 
 const storeDefault = () => {
   return {
