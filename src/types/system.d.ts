@@ -1,4 +1,4 @@
-import { type typesFileStoreSchema, type typesAdminStoreSchema } from '@/schemas'
+import { type typesFileStoreSchema, type typesAdminStoreSchema, type typesProfileStoreSchema } from '@/schemas'
 import { type z } from 'zod'
 
 export type AdminStore = z.infer<typeof typesAdminStoreSchema>
@@ -12,3 +12,5 @@ export type AdminStore = z.infer<typeof typesAdminStoreSchema>
 // }
 
 export type FileStore = z.infer<typeof typesFileStoreSchema>
+
+export type ProfileStore = z.infer<typeof typesProfileStoreSchema>

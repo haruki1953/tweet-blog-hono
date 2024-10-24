@@ -28,3 +28,17 @@ export const systemFileConfig = {
   smallImageSavePath: path.join(imageSavePath, 'small/'),
   imageExtension: '.jpg'
 }
+
+export const systemProfileConfig = {
+  storeFile: path.join(systemDataPath, 'profile.json'),
+  storeDefault: {
+    avatar: null,
+    avatarArray: [],
+    name: '',
+    bio: '',
+    socialMedias: [],
+    aboutMarkdown: '',
+    externalLinks: [],
+    externalIcons: []
+  }
+}
