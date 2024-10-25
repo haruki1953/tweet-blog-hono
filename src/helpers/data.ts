@@ -12,7 +12,7 @@ export const handleResData = (
   }
 }
 
-export const handleFileInFromData = (
+export const handleFileInFormData = (
   fromData: FormData, fieldname: string
 ) => {
   const file = fromData.get(fieldname)
@@ -22,10 +22,10 @@ export const handleFileInFromData = (
   return file
 }
 
-export const handleImageInFromData = (
+export const handleImageInFormData = (
   fromData: FormData, fieldname: string
 ) => {
-  const file = handleFileInFromData(fromData, fieldname)
+  const file = handleFileInFormData(fromData, fieldname)
   if (!file.type.startsWith('image/')) {
     throw new AppError('请上传图片文件')
   }

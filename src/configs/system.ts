@@ -14,6 +14,8 @@ export const systemAdminConfig = {
 }
 
 const imageSavePath = path.join(systemDataPath, 'public/image/')
+const avatarSavePath = path.join(systemDataPath, 'public/avatar/')
+const iconSavePath = path.join(systemDataPath, 'public/icon/')
 
 export const systemFileConfig = {
   storeFile: path.join(systemDataPath, 'file.json'),
@@ -26,7 +28,9 @@ export const systemFileConfig = {
   originalImageSavePath: path.join(imageSavePath, 'original/'),
   largeImageSavePath: path.join(imageSavePath, 'large/'),
   smallImageSavePath: path.join(imageSavePath, 'small/'),
-  imageExtension: '.jpg'
+  imageExtension: '.jpg',
+  avatarSavePath,
+  iconSavePath
 }
 
 export const systemProfileConfig = {

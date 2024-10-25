@@ -10,8 +10,10 @@ try {
   confirmSaveFolderExists(systemFileConfig.originalImageSavePath)
   confirmSaveFolderExists(systemFileConfig.largeImageSavePath)
   confirmSaveFolderExists(systemFileConfig.smallImageSavePath)
+  confirmSaveFolderExists(systemFileConfig.avatarSavePath)
+  confirmSaveFolderExists(systemFileConfig.iconSavePath)
 } catch (error) {
-  throw new AppError('image 路径初始化失败')
+  throw new AppError('file 路径初始化失败')
 }
 
 const storeDefault = () => {

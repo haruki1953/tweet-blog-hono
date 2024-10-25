@@ -48,6 +48,7 @@ export const randomIntPadStart2 = () => {
 }
 
 export const getFileExtension = (filename: string) => {
+  // 将包含点，如.jpg
   // 使用正则表达式匹配文件名中的后缀名
   const match = filename.match(/(\.[a-zA-Z0-9]+)$/)
   return (match != null) ? match[1] : ''

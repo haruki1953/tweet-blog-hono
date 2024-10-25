@@ -1,21 +1,22 @@
 import { type ProfileStore } from '@/types'
 import { store, save } from '../init'
 
-export const setNameBio = (info: {
-  name: ProfileStore['name']
+export const setNameBio = (
+  name: ProfileStore['name'],
   bio: ProfileStore['bio']
-}) => {
+) => {
   save({
     ...store,
-    ...info
+    name,
+    bio
   })
 }
 
-export const setAboutMarkdown = (info: {
+export const setAboutMarkdown = (
   aboutMarkdown: ProfileStore['aboutMarkdown']
-}) => {
+) => {
   save({
     ...store,
-    ...info
+    aboutMarkdown
   })
 }

@@ -3,7 +3,7 @@ import { imageDeleteOriginalParamSchema, imageDeleteParamSchema, imageGetByCurso
 import { imageDeleteAllOriginalService, imageDeleteAllService, imageDeleteOriginalService, imageDeleteService, imageGetByCursorService, imageGetByIdService, imageGetConfigService, imageSendService, imageUpdateConfigService, imageUpdateService } from '@/services'
 import { useAdminSystem } from '@/systems'
 import { type UserJwtVariables } from '@/types'
-import { handleImageInFromData, handleResData, zValWEH } from '@/helpers'
+import { handleImageInFormData, handleResData, zValWEH } from '@/helpers'
 import { Hono } from 'hono'
 import { jwt } from 'hono/jwt'
 
@@ -19,7 +19,7 @@ router.post(
       throw new AppError('未上传表单')
     })
 
-    const imageFile = handleImageInFromData(formData, 'image')
+    const imageFile = handleImageInFormData(formData, 'image')
 
     const data = await imageSendService(imageFile)
 

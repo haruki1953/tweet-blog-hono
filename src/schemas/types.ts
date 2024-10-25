@@ -47,5 +47,3 @@ export const typesProfileStoreSchema = z.object({
     addAt: z.coerce.date()
   }))
 })
-
-type a = z.infer<typeof typesProfileStoreSchema>
