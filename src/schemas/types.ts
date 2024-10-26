@@ -26,6 +26,7 @@ export const typesProfileStoreSchema = z.object({
   name: z.string(),
   bio: z.string(),
   socialMedias: z.array(z.object({
+    uuid: z.string(),
     name: z.string(),
     description: z.string(),
     link: z.string(),
@@ -38,6 +39,7 @@ export const typesProfileStoreSchema = z.object({
     description: z.string(),
     link: z.string(),
     icon: z.string(),
+    isRadiu: z.boolean(),
     type: z.enum(['contact', 'friend'])
   })),
   externalIcons: z.array(z.object({

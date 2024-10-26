@@ -1,5 +1,5 @@
-import { profileUpdateAboutMdJsonSchema, profileUpdateNameBioJsonSchema, profileUpdateSocialMediasJsonSchema } from '@/schemas'
-import { profileAddAvatarService, profileGetDataService, profileGetStoreService, profileUpdateAboutMdService, profileUpdateNameBioService, profileUpdateSocialMediasService } from '@/services'
+import { profileDeleteAvatarByUuidParamSchema, profileDeleteExternalIconByUuidParamSchema, profileUpdateAboutMdJsonSchema, profileUpdateAvatarJsonSchema, profileUpdateExternalLinksJsonSchema, profileUpdateNameBioJsonSchema, profileUpdateSocialMediasJsonSchema } from '@/schemas'
+import { profileAddAvatarService, profileAddExternalIconService, profileDeleteAvatarByUuidService, profileDeleteAvatarNotUsedService, profileDeleteExternalIconByUuidService, profileDeleteExternalIconNotUsedService, profileGetDataService, profileGetStoreService, profileUpdateAboutMdService, profileUpdateAvatarService, profileUpdateExternalLinksService, profileUpdateNameBioService, profileUpdateSocialMediasService } from '@/services'
 import { handleImageInFormData, handleResData, zValWEH } from '@/helpers'
 import { Hono } from 'hono'
 import { type UserJwtVariables } from '@/types'
@@ -94,6 +94,7 @@ router.put(
   }
 )
 
+// avatar
 router.post(
   '/avatar',
   async (c) => {
@@ -105,6 +106,90 @@ router.post(
     const data = await profileAddAvatarService(imageFile)
 
     c.status(201)
+    return c.json(handleResData(0, '上传成功', data))
+  }
+)
+
+router.delete(
+  '/avatar/uuid/:uuid',
+  zValWEH('param', profileDeleteAvatarByUuidParamSchema),
+  async (c) => {
+    const { uuid } = c.req.valid('param')
+    const data = profileDeleteAvatarByUuidService(uuid)
+
+    c.status(200)
+    return c.json(handleResData(0, '删除成功', data))
+  }
+)
+
+router.delete(
+  '/avatar/not-used',
+  async (c) => {
+    const data = profileDeleteAvatarNotUsedService()
+
+    c.status(200)
+    return c.json(handleResData(0, '删除成功', data))
+  }
+)
+
+router.put(
+  '/avatar',
+  zValWEH('json', profileUpdateAvatarJsonSchema),
+  async (c) => {
+    const { uuid } = c.req.valid('json')
+    const data = profileUpdateAvatarService(uuid)
+
+    c.status(200)
+    return c.json(handleResData(0, '修改成功', data))
+  }
+)
+
+// external-icon
+router.post(
+  '/external-icon',
+  async (c) => {
+    const formData = await c.req.formData().catch(() => {
+      throw new AppError('未上传表单')
+    })
+    const imageFile = handleImageInFormData(formData, 'image')
+
+    const data = await profileAddExternalIconService(imageFile)
+
+    c.status(201)
+    return c.json(handleResData(0, '上传成功', data))
+  }
+)
+
+router.delete(
+  '/external-icon/uuid/:uuid',
+  zValWEH('param', profileDeleteExternalIconByUuidParamSchema),
+  async (c) => {
+    const { uuid } = c.req.valid('param')
+    const data = profileDeleteExternalIconByUuidService(uuid)
+
+    c.status(200)
+    return c.json(handleResData(0, '删除成功', data))
+  }
+)
+
+router.delete(
+  '/external-icon/not-used',
+  async (c) => {
+    const data = profileDeleteExternalIconNotUsedService()
+
+    c.status(200)
+    return c.json(handleResData(0, '删除成功', data))
+  }
+)
+
+router.put(
+  '/external-links',
+  zValWEH('json', profileUpdateExternalLinksJsonSchema),
+  async (c) => {
+    const { externalLinks } = c.req.valid('json')
+    const data = profileUpdateExternalLinksService(externalLinks)
+
+    c.status(200)
     return c.json(handleResData(0, '修改成功', data))
   }
 )
