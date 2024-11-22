@@ -39,7 +39,7 @@ export const typesProfileStoreSchema = z.object({
     description: z.string(),
     link: z.string(),
     icon: z.string(),
-    isRadiu: z.boolean(),
+    isCircle: z.boolean(),
     type: z.enum(['contact', 'friend'])
   })),
   externalIcons: z.array(z.object({

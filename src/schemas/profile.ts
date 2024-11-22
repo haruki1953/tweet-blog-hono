@@ -45,7 +45,7 @@ export type ProfileDeleteExternalIconByUuidParamType = z.infer<typeof profileDel
 //     description: z.string(),
 //     link: z.string(),
 //     icon: z.string(),
-//     isRadiu: z.boolean(),
+//     isCircle: z.boolean(),
 //     type: z.enum(['contact', 'friend'])
 //   })),
 // })
