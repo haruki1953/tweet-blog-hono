@@ -11,6 +11,7 @@ import { prisma } from '@/systems'
 import { deleteImageByIdWhereNonePost } from './base'
 import { postConfig } from '@/configs'
 import { type PromiseReturnType } from '@prisma/client/extension'
+import { type PostPrisma } from '@/types'
 
 const postIncludeBase = {
   images: true,
@@ -120,7 +121,7 @@ export const postUpdateService = async (postInfo: PostUpdateJsonType) => {
   return post
 }
 
-export const postDeleteService = async (id: number, query: PostDeleteQueryType) => {
+export const postDeleteService = async (id: PostPrisma['id'], query: PostDeleteQueryType) => {
   // can direct delete post, prisma can auto manage relation (images)
   const post = await prisma.post.delete({
     where: { id, isDeleted: true },
@@ -165,7 +166,7 @@ export const postDeleteAllService = async (query: PostDeleteAllQueryType) => {
 }
 
 export const postGetByIdService = async (
-  id: number, query: PostGetByIdQueryType
+  id: PostPrisma['id'], query: PostGetByIdQueryType
 ) => {
   let isDelWhereVal: false | undefined
   if (
@@ -209,12 +210,12 @@ export const postGetByIdService = async (
 }
 
 export const postGetByCursorService = async (
-  cursorId: number, query: PostGetByCursorQueryType
+  cursorId: PostPrisma['id'], query: PostGetByCursorQueryType
 ) => {
   // when cursorId is 0, it's first,
   // skip must be undefined, and cursor is undefined
-  const skip = cursorId === 0 ? undefined : 1
-  const cursor = cursorId === 0 ? undefined : { id: cursorId }
+  const skip = cursorId === '' ? undefined : 1
+  const cursor = cursorId === '' ? undefined : { id: cursorId }
 
   // when have content, filtering contains
   const OR = (

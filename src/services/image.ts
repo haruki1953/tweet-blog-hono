@@ -3,6 +3,7 @@ import { type ImageGetByCursorQueryType, type ImageUpdateConfigJsonType, type Im
 import { prisma, useImageSystem } from '@/systems'
 import { deleteImageByIdWhereNonePost } from './base'
 import { postConfig } from '@/configs'
+import { type ImagePrisma } from '@/types'
 
 const imageSystem = useImageSystem()
 
@@ -58,7 +59,7 @@ export const imageUpdateConfigService = (
   imageSystem.updateImageConfig(configInfo)
 }
 
-export const imageDeleteService = async (id: number) => {
+export const imageDeleteService = async (id: ImagePrisma['id']) => {
   return await deleteImageByIdWhereNonePost(id)
 }
 
@@ -74,7 +75,7 @@ export const imageDeleteAllService = async () => {
   return await Promise.all(imgDelPromises)
 }
 
-export const imageDeleteOriginalService = async (id: number) => {
+export const imageDeleteOriginalService = async (id: ImagePrisma['id']) => {
   // get info before update
   const image = await prisma.image.findUnique({
     where: { id }
@@ -131,7 +132,7 @@ const imageIncludeOnGet = {
   }
 }
 
-export const imageGetByIdService = async (id: number) => {
+export const imageGetByIdService = async (id: ImagePrisma['id']) => {
   const image = await prisma.image.findUnique({
     where: { id },
     include: { ...imageIncludeOnGet }
@@ -143,12 +144,12 @@ export const imageGetByIdService = async (id: number) => {
 }
 
 export const imageGetByCursorService = async (
-  cursorId: number, query: ImageGetByCursorQueryType
+  cursorId: ImagePrisma['id'], query: ImageGetByCursorQueryType
 ) => {
   // when cursorId is 0, it's first,
   // skip must be undefined, and cursor is undefined
-  const skip = cursorId === 0 ? undefined : 1
-  const cursor = cursorId === 0 ? undefined : { id: cursorId }
+  const skip = cursorId === '' ? undefined : 1
+  const cursor = cursorId === '' ? undefined : { id: cursorId }
 
   let posts
   if (query.havePost === 'true') {

@@ -2,7 +2,7 @@ import { postConfig } from '@/configs'
 import { z } from 'zod'
 import { type IdParamType, idParamSchema } from './base'
 
-const id = z.number().int().positive()
+const id = z.string()
 
 export const postSendJsonSchema = z.object({
   content: z.string().optional(),
@@ -40,7 +40,7 @@ export const postGetByIdQuerySchma = z.object({
 export type PostGetByIdQueryType = z.infer<typeof postGetByIdQuerySchma>
 
 export const postGetByCursorParamSchma = z.object({
-  id: z.coerce.number().int().nonnegative()
+  id: z.string().optional()
 })
 export type PostGetByCursorParamType = z.infer<typeof postGetByCursorParamSchma>
 

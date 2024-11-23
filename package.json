@@ -1,7 +1,8 @@
 {
   "name": "tweet-blog-hono",
   "scripts": {
-    "dev": "tsx watch src/index.ts"
+    "dev": "tsx watch src/index.ts",
+    "lint": "eslint --ext .ts src"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",

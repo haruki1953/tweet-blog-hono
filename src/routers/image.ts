@@ -115,14 +115,14 @@ router.get(
 )
 
 router.get(
-  '/cursor/:id',
+  '/cursor/:id?',
   zValWEH('param', imageGetByCursorParamSchema),
   zValWEH('query', imageGetByCursorQuerySchema),
   async (c) => {
     const { id } = c.req.valid('param')
     const query = c.req.valid('query')
 
-    const data = await imageGetByCursorService(id, query)
+    const data = await imageGetByCursorService(id ?? '', query)
     c.status(200)
     return c.json(handleResData(0, '获取成功', data))
   }

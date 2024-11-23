@@ -1,5 +1,6 @@
 import { AppError } from '@/classes'
 import { prisma, useAdminSystem, useImageSystem } from '@/systems'
+import { type ImagePrisma } from '@/types'
 import { sign } from 'hono/jwt'
 
 const adminSystem = useAdminSystem()
@@ -16,7 +17,7 @@ export const generateTokenAdmin = async (
   return token
 }
 
-export const deleteImageByIdWhereNonePost = async (id: number) => {
+export const deleteImageByIdWhereNonePost = async (id: ImagePrisma['id']) => {
   // in table, delete image
   const img = await prisma.image.delete({
     where: { id, posts: { none: {} } }

@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { type IdParamType, idParamSchema } from './base'
 
 export const imageUpdateJsonSchema = z.object({
-  id: z.number().int().positive(),
+  id: z.string(),
   alt: z.string().nullable().optional(),
   twitterLargeImageLink: z.string().nullable().optional()
 })
@@ -25,7 +25,7 @@ export const imageGetByIdParamSchema = idParamSchema
 export type ImageGetByIdParamType = IdParamType
 
 export const imageGetByCursorParamSchema = z.object({
-  id: z.coerce.number().int().nonnegative()
+  id: z.string().optional()
 })
 export type ImageGetByCursorParamType = z.infer<typeof imageGetByCursorParamSchema>
 

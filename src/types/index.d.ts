@@ -1,3 +1,3 @@
-export * from './res'
+export * from './data'
 export * from './system'
 export * from './jwt'
