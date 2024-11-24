@@ -19,7 +19,7 @@ open http://localhost:3000
 
 遇到了问题
 ```
-现在正在准备docker打包，所以想先尝试一下将其编译为js再运行
+现在正在准备docker打包，所以想先尝试一下将项目其编译为js再运行
 
 pnpm build 之后，执行 node dist/index.js 出现了报错
 
@@ -47,8 +47,10 @@ Node.js v20.10.0
 ```
 大概是因为 Node 在处理模块时，不能自动找到目录里的 index.js 文件，
 
-比如 import { httpPort } from './configs'
-好像必须要这样写 import { httpPort } from './configs/index'
+比如 
+import { httpPort } from './configs'
+好像必须要这样写 
+import { httpPort } from './configs/index'
 
 但是自己 pnpm dev 时是没问题的，整个项目里都是省略了index的，再改有点不现实
 
