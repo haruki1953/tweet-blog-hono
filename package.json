@@ -2,8 +2,10 @@
   "name": "tweet-blog-hono",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "lint": "eslint --ext .ts src"
+    "lint": "eslint --ext .ts src",
+    "build": "tsc"
   },
+  "type": "module",
   "dependencies": {
     "@hono/node-server": "^1.13.7",
     "@hono/zod-validator": "^0.2.2",
