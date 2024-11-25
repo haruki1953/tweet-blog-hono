@@ -58,3 +58,18 @@ import { httpPort } from './configs/index'
 是不是哪里还要进行一些设置啊
 ```
 
+解决方法是让ts编译为CommonJS（tsconfig.json）
+```
+    "target": "ESNext",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "esModuleInterop": true, // 使得 TS 能兼容 ES6 和 CommonJS 的导入导出方式
+```
+
+然后编译后的js不能识别路径别名，通过tsc-alias包解决
+```
+pnpm install tsc-alias --save-dev
+
+"build": "tsc && tsc-alias"
+```
+

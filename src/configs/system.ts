@@ -1,10 +1,10 @@
 import path from 'path'
-import { fileURLToPath } from 'url'
+// import { fileURLToPath } from 'url'
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const __filename = fileURLToPath(import.meta.url)
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const __dirname = path.dirname(__filename)
+// // eslint-disable-next-line @typescript-eslint/naming-convention
+// const __filename = fileURLToPath(import.meta.url)
+// // eslint-disable-next-line @typescript-eslint/naming-convention
+// const __dirname = path.dirname(__filename)
 
 export const systemDataPath = path.join(__dirname, '../../data/')
 

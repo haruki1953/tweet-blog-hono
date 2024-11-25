@@ -3,9 +3,8 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "lint": "eslint --ext .ts src",
-    "build": "tsc"
+    "build": "tsc && tsc-alias"
   },
-  "type": "module",
   "dependencies": {
     "@hono/node-server": "^1.13.7",
     "@hono/zod-validator": "^0.2.2",
@@ -26,6 +25,7 @@
     "eslint-plugin-n": "^15.0.0 || ^16.0.0 ",
     "eslint-plugin-promise": "^6.0.0",
     "prisma": "^5.18.0",
+    "tsc-alias": "^1.8.10",
     "tsx": "^4.7.1",
     "typescript": "*"
   }

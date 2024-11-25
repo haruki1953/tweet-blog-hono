@@ -1,8 +1,9 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "esModuleInterop": true, // 使得 TS 能兼容 ES6 和 CommonJS 的导入导出方式
     "strict": true,
     "skipLibCheck": true,
     "types": [
