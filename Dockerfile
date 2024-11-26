@@ -3,20 +3,30 @@ FROM node:20.12.2-alpine3.19 AS base
 FROM base AS builder
 WORKDIR /app
 
-# 复制项目全部文件至工作目录 
-# 注意：提前删除了/node_modules /data
-COPY . .
-
 # 设置代理
 ENV http_proxy=http://192.168.2.110:10811/
 ENV https_proxy=http://192.168.2.110:10811/
 
-# 安装 pnpm、安装依赖、运行迁移、编译和修剪依赖
+# 复制安装依赖文件
+COPY package.json pnpm-lock.yaml ./
+
+# 安装 pnpm、安装依赖
 RUN npm install -g pnpm && \
-    pnpm install --frozen-lockfile && \
-    pnpm prisma migrate dev --name init && \
+    pnpm install --frozen-lockfile
+
+# 复制文件 tsconfig.json 和 entrypoint.sh
+COPY tsconfig.json entrypoint.sh ./
+# 复制目录 src、prisma 和 static
+COPY ./src ./src
+COPY ./prisma ./prisma
+COPY ./static ./static
+
+# 生成PrismaClient、编译、修剪依赖、清理缓存
+RUN pnpm prisma generate && \
     pnpm build && \
-    pnpm prune --prod
+    pnpm prune --prod && \
+    pnpm store prune && \
+    npm cache clean --force
 
 # 取消代理
 ENV http_proxy=
@@ -25,20 +35,24 @@ ENV https_proxy=
 FROM base AS runner
 WORKDIR /app
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 hono
+# 设置代理
+ENV http_proxy=http://192.168.2.110:10811/
+ENV https_proxy=http://192.168.2.110:10811/
 
-COPY --from=builder --chown=hono:nodejs /app/node_modules /app/node_modules
-COPY --from=builder --chown=hono:nodejs /app/package.json /app/package.json
-COPY --from=builder --chown=hono:nodejs /app/dist /app/dist
-COPY --from=builder --chown=hono:nodejs /app/data /app/data
-COPY --from=builder --chown=hono:nodejs /app/static /app/static
-COPY --from=builder --chown=hono:nodejs /app/prisma /app/prisma
+# 安装pnpm
+RUN npm install -g pnpm && \
+    npm cache clean --force
 
-USER hono
+# 复制文件
+COPY --from=builder /app/package.json /app/package.json
+COPY --from=builder /app/node_modules /app/node_modules
+COPY --from=builder /app/dist /app/dist
+COPY --from=builder /app/prisma /app/prisma
+COPY --from=builder /app/static /app/static
+COPY --from=builder /app/data /app/data
 
 # 设置端口
 ENV TWEET_BLOG_HONO_PORT=51125
 EXPOSE 51125
 
-CMD ["node", "dist/index.js"]
+ENTRYPOINT ["sh", "entrypoint.sh"]

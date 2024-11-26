@@ -29,3 +29,4 @@ lerna-debug.log*
 /data
 /dist
 # /static
+/static

@@ -9,7 +9,13 @@ import { jwt } from 'hono/jwt'
 const router = new Hono<{ Variables: UserJwtVariables }>()
 
 const adminSystem = useAdminSystem()
-router.use(jwt({ secret: adminSystem.getJwtAdminSecretKey() }))
+// router.use(jwt({ secret: adminSystem.getJwtAdminSecretKey() }))
+router.use(async (c, next) => {
+  // 动态获取最新的 JWT 密钥
+  const secret = adminSystem.getJwtAdminSecretKey()
+  // 使用获取到的密钥调用 JWT 中间件
+  await jwt({ secret })(c, next)
+})
 
 router.put(
   '/auth',

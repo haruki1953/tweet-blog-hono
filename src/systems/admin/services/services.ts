@@ -2,6 +2,7 @@ import { AppError } from '@/classes'
 import { store, save } from '../init'
 import { canAttemptLogin, recordLoginFailure, resetLoginControl } from './login-control'
 import { systemAdminConfig } from '@/configs'
+import { generateRandomKey } from '@/utils'
 
 export const confirmAuth = (username: string, password: string) => {
   if (!canAttemptLogin()) {
@@ -18,10 +19,12 @@ export const confirmAuth = (username: string, password: string) => {
 }
 
 export const updateAuth = (username: string, password: string) => {
+  // 要重置密钥
   save({
     ...store,
     username,
-    password
+    password,
+    jwtAdminSecretKey: generateRandomKey()
   })
 }
 
