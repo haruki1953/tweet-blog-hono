@@ -3,9 +3,7 @@ import { defineStoreSystem } from '@/helpers'
 import { typesProfileStoreSchema } from '@/schemas'
 
 const storeDefault = () => {
-  return {
-    ...systemProfileConfig.storeDefault
-  }
+  return systemProfileConfig.storeDefault()
 }
 
 const storeSystem = defineStoreSystem({

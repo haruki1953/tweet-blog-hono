@@ -17,9 +17,7 @@ try {
 }
 
 const storeDefault = () => {
-  return {
-    ...systemFileConfig.storeDefault
-  }
+  return systemFileConfig.storeDefault()
 }
 
 const storeSystem = defineStoreSystem({

@@ -7,6 +7,14 @@ export const typesAdminStoreSchema = z.object({
   jwtAdminExpSeconds: z.number().int().positive(),
   loginMaxFailCount: z.number().int().positive(),
   loginLockSeconds: z.number().int().positive()
+  // testObj: z.object({
+  //   a: z.string(),
+  //   b: z.string()
+  // }),
+  // testArray: z.array(z.object({
+  //   a: z.string(),
+  //   b: z.string().optional()
+  // }))
 })
 
 export const typesFileStoreSchema = z.object({

@@ -29,9 +29,10 @@ export const updateAuth = (username: string, password: string) => {
 }
 
 export const isAuthDefault = () => {
+  const storeDefaultVal = systemAdminConfig.storeDefault()
   if (
-    store.username === systemAdminConfig.storeDefault.username &&
-    store.password === systemAdminConfig.storeDefault.password
+    store.username === storeDefaultVal.username &&
+    store.password === storeDefaultVal.password
   ) {
     return true
   }

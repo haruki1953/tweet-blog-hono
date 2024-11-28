@@ -5,7 +5,7 @@ import { defineStoreSystem } from '@/helpers'
 
 const storeDefault = () => {
   return {
-    ...systemAdminConfig.storeDefault,
+    ...systemAdminConfig.storeDefault(),
     jwtAdminSecretKey: generateRandomKey()
   }
 }
