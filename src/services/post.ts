@@ -52,8 +52,8 @@ export const postSendService = async (postInfo: PostSendJsonType) => {
           ? undefined
           : ({ connect: { id: postInfo.parentPostId } })
       ),
-      twitterId: postInfo.twitterId,
-      twitterLink: postInfo.twitterLink,
+      // twitterId: postInfo.twitterId,
+      // twitterLink: postInfo.twitterLink,
       isDeleted: postInfo.isDeleted
     },
     include: {
@@ -104,8 +104,8 @@ export const postUpdateService = async (postInfo: PostUpdateJsonType) => {
                 : ({ connect: { id: postInfo.parentPostId } })
             )
       ),
-      twitterId: postInfo.twitterId,
-      twitterLink: postInfo.twitterLink,
+      // twitterId: postInfo.twitterId,
+      // twitterLink: postInfo.twitterLink,
       isDeleted: postInfo.isDeleted
     },
     include: {

@@ -11,8 +11,8 @@ export const postSendJsonSchema = z.object({
     // .min(new Date('1971-01-01'), { message: 'Too old' })
     .optional(),
   parentPostId: id.nullable().optional(),
-  twitterId: z.string().nullable().optional(),
-  twitterLink: z.string().nullable().optional(),
+  // twitterId: z.string().nullable().optional(),
+  // twitterLink: z.string().nullable().optional(),
   isDeleted: z.boolean().optional()
 })
 export type PostSendJsonType = z.infer<typeof postSendJsonSchema>

@@ -37,8 +37,8 @@ export const imageUpdateService = async (
       id: imageInfo.id
     },
     data: {
-      alt: imageInfo.alt,
-      twitterLargeImageLink: imageInfo.twitterLargeImageLink
+      alt: imageInfo.alt
+      // twitterLargeImageLink: imageInfo.twitterLargeImageLink
     }
   }).catch((error) => {
     if (error.code === 'P2025') {

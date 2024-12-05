@@ -3,8 +3,8 @@ import { type IdParamType, idParamSchema } from './base'
 
 export const imageUpdateJsonSchema = z.object({
   id: z.string(),
-  alt: z.string().nullable().optional(),
-  twitterLargeImageLink: z.string().nullable().optional()
+  alt: z.string().nullable().optional()
+  // twitterLargeImageLink: z.string().nullable().optional()
 })
 export type ImageUpdateJsonType = z.infer<typeof imageUpdateJsonSchema>
 
