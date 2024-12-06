@@ -6,10 +6,15 @@ export const postControlImportJsonSchema = z.object({
   importPosts: z.array(z.object({
     content: z.string().optional(),
     createdAt: z.coerce.date().optional(),
+    importImages: z.array(z.object({
+      link: z.string(),
+      alt: z.string().optional(),
+      platform: z.enum(platformLabelEnum).optional(),
+      platformId: z.string().optional()
+    })).max(postConfig.postMaxImages),
     platform: z.enum(platformLabelEnum).optional(),
-    platformImages: z.array(z.string()).max(postConfig.postMaxImages),
-    platformId: z.string().nullable().optional(),
-    platformLink: z.string().nullable().optional(),
+    platformId: z.string().optional(),
+    platformLink: z.string().optional(),
     platformParentId: z.string().nullable().optional(),
     isDeleted: z.boolean().optional()
   }))

@@ -29,6 +29,19 @@ export const imageSendService = async (
   })
 }
 
+export const imageSendByUrlService = async (
+  imageUrl: string
+) => {
+  const imageFile = await imageUrlToFile(imageUrl)
+  return await imageSendService(imageFile)
+}
+
+const imageUrlToFile = async (url: string) => {
+  const response = await fetch(url).catch(() => { throw new AppError('图片获取失败', 500) })
+  const blob = await response.blob()
+  return new File([blob], `image.${blob.type.split('/')[1]}`, { type: blob.type })
+}
+
 export const imageUpdateService = async (
   imageInfo: ImageUpdateJsonType
 ) => {

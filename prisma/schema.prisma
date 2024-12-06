@@ -49,17 +49,17 @@ model PostImport {
 }
 
 model Image {
-  id           String       @id @default(uuid())
+  id           String        @id @default(uuid())
   alt          String?
   path         String
-  addedAt      DateTime     @default(now())
-  smallSize    Int          @default(0)
-  largeSize    Int          @default(0)
-  originalSize Int          @default(0)
+  addedAt      DateTime      @default(now())
+  smallSize    Int           @default(0)
+  largeSize    Int           @default(0)
+  originalSize Int           @default(0)
   originalPath String?
-  posts        Post[]       @relation("PostImages")
+  posts        Post[]        @relation("PostImages")
   // twitterLargeImageLink String?
-  imageImport  ImageImport? @relation("ImageImport")
+  imageImports ImageImport[] @relation("ImageImports")
 }
 
 model ImageImport {
@@ -68,6 +68,6 @@ model ImageImport {
   platformImageId String
   link            String
   importedAt      DateTime @default(now())
-  image           Image    @relation("ImageImport", fields: [imageId], references: [id])
-  imageId         String   @unique
+  image           Image    @relation("ImageImports", fields: [imageId], references: [id])
+  imageId         String
 }
