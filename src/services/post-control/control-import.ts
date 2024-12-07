@@ -1,8 +1,7 @@
 import { type PostControlImportJsonType } from '@/schemas/post-control'
 import { prisma } from '@/systems'
-import { imageSendByUrlService, imageUpdateService } from './image'
+import { imageSendByUrlService, imageUpdateService, postSendService, postUpdateService } from './dependencies'
 import { type ImagePrisma } from '@/types'
-import { postSendService, postUpdateService } from './post'
 
 // 帖子导入服务
 export const postControlImportService = async (json: PostControlImportJsonType) => {

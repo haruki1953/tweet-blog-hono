@@ -4,7 +4,7 @@ import Jimp from 'jimp'
 import fs from 'fs'
 import fsp from 'fs/promises'
 
-import { confirmSaveFolderExists, getFileExtension, randomIntPadStart2 } from '@/utils'
+import { confirmSaveFolderExists, randomIntPadStart2 } from '@/utils'
 import { store, save } from '../init'
 import { systemFileConfig } from '@/configs'
 import { AppError } from '@/classes'
@@ -43,8 +43,10 @@ export const processImage = async (imageFile: File) => {
 
   const imageSaveName = `${intStr}/${nameUuid}${systemFileConfig.imageExtension}`
 
-  const originalExtension = getFileExtension(imageFile.name)
-  const originalSaveName = `${intStr}/${nameUuid}${originalExtension}`
+  // const originalExtension = getFileExtension(imageFile.name)
+  // const originalSaveName = `${intStr}/${nameUuid}${originalExtension}`
+  const originalExtension = imageFile.type.split('/')[1] // 获取文件类型后缀
+  const originalSaveName = `${intStr}/${nameUuid}.${originalExtension}`
 
   const imageOriginalSavePathName = path.join(
     systemFileConfig.originalImageSavePath,
