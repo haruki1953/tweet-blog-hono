@@ -23,7 +23,7 @@ export const updateImageConfig = (
   save(info)
 }
 
-export const processImage = async (imageFile: File) => {
+export const processImage = async (imageFile: File | Blob) => {
   const imageBuffer = Buffer.from(await imageFile.arrayBuffer())
   const nameUuid = uuidv4()
   const intStr = randomIntPadStart2()
@@ -45,8 +45,8 @@ export const processImage = async (imageFile: File) => {
 
   // const originalExtension = getFileExtension(imageFile.name)
   // const originalSaveName = `${intStr}/${nameUuid}${originalExtension}`
-  const originalExtension = imageFile.type.split('/')[1] // 获取文件类型后缀
-  const originalSaveName = `${intStr}/${nameUuid}.${originalExtension}`
+  const originalExtension = '.' + imageFile.type.split('/')[1] // 获取文件类型后缀
+  const originalSaveName = `${intStr}/${nameUuid}${originalExtension}`
 
   const imageOriginalSavePathName = path.join(
     systemFileConfig.originalImageSavePath,

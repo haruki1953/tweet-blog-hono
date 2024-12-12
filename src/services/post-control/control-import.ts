@@ -8,8 +8,10 @@ export const postControlImportService = async (json: PostControlImportJsonType) 
   const { importPosts } = json
   // 遍历，导入帖子
   for (const post of importPosts) {
-    await postControlImportServicePostImportPart(post).catch(() => null)
+    const postinfo = await postControlImportServicePostImportPart(post).catch(() => null)
+    console.log(postinfo)
   }
+  console.log('导入完毕')
 }
 
 // 帖子导入服务：帖子导入部分
@@ -20,7 +22,10 @@ const postControlImportServicePostImportPart = async (
   // 遍历，导入图片
   const targetImages = (await Promise.all(
     importImages.map(async (image) => {
-      return await postControlImportServiceImageImportPart(image).catch(() => null)
+      return await postControlImportServiceImageImportPart(image).catch((error) => {
+        console.log(error)
+        return null
+      })
     })
   )).filter((i): i is ImagePrisma => i != null)
 

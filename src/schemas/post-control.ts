@@ -1,4 +1,4 @@
-import { platformLabelEnum, postConfig } from '@/configs'
+import { platformKeyEnum } from '@/configs'
 import { z } from 'zod'
 // import { type IdParamType, idParamSchema } from './base'
 
@@ -9,10 +9,11 @@ export const postControlImportJsonSchema = z.object({
     importImages: z.array(z.object({
       link: z.string(),
       alt: z.string().optional(),
-      platform: z.enum(platformLabelEnum).optional(),
+      platform: z.enum(platformKeyEnum).optional(),
       platformId: z.string().optional()
-    })).max(postConfig.postMaxImages),
-    platform: z.enum(platformLabelEnum).optional(),
+    })),
+    // .max(postConfig.postMaxImages)
+    platform: z.enum(platformKeyEnum).optional(),
     platformId: z.string().optional(),
     platformLink: z.string().optional(),
     platformParentId: z.string().nullable().optional(),

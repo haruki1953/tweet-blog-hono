@@ -5,10 +5,13 @@ import { deleteImageByIdWhereNonePost } from './base'
 import { postConfig } from '@/configs'
 import { type ImagePrisma } from '@/types'
 
+import fetch from 'node-fetch'
+import { HttpsProxyAgent } from 'https-proxy-agent'
+
 const imageSystem = useImageSystem()
 
 export const imageSendService = async (
-  imageFile: File
+  imageFile: File | Blob
 ) => {
   const {
     path,
@@ -32,14 +35,20 @@ export const imageSendService = async (
 export const imageSendByUrlService = async (
   imageUrl: string
 ) => {
-  const imageFile = await imageUrlToFile(imageUrl)
-  return await imageSendService(imageFile)
+  const imageBlob = await imageUrlToBlob(imageUrl)
+  return await imageSendService(imageBlob)
 }
 
-const imageUrlToFile = async (url: string) => {
-  const response = await fetch(url).catch(() => { throw new AppError('图片获取失败', 500) })
+const imageUrlToBlob = async (url: string) => {
+  // 暂时试验，之后完成代理设置接口后完善
+  const response = await fetch(url, {
+    agent: new HttpsProxyAgent('http://127.0.0.1:10809/')
+  }).catch(() => {
+    throw new AppError('图片获取失败', 500)
+    // throw error
+  })
   const blob = await response.blob()
-  return new File([blob], `image.${blob.type.split('/')[1]}`, { type: blob.type })
+  return blob
 }
 
 export const imageUpdateService = async (

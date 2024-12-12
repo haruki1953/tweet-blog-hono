@@ -47,7 +47,7 @@ export const systemFileConfig = {
   originalImageSavePath: path.join(imageSavePath, 'original/'),
   largeImageSavePath: path.join(imageSavePath, 'large/'),
   smallImageSavePath: path.join(imageSavePath, 'small/'),
-  imageExtension: '.jpg',
+  imageExtension: '.jpeg',
   avatarSavePath,
   iconSavePath
 }

@@ -1,5 +1,5 @@
 import { } from '@/schemas'
-import { } from '@/services'
+import { postControlImportService } from '@/services'
 import { useAdminSystem } from '@/systems'
 import { type UserJwtVariables } from '@/types'
 import { handleResData, zValWEH } from '@/helpers'
@@ -22,14 +22,12 @@ router.post(
   '/import',
   zValWEH('json', postControlImportJsonSchema),
   async (c) => {
-    // const {
-    //   importPosts
-    // } = c.req.valid('json')
+    const json = c.req.valid('json')
 
-    // // adminUpdateAuthService(username, password)
+    postControlImportService(json).catch(() => {})
 
     c.status(200)
-    return c.json(handleResData(0, '导入成功'))
+    return c.json(handleResData(0, '正在导入'))
   }
 )
 
