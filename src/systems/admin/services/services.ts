@@ -67,3 +67,21 @@ export const updateAdminInfo = (
     ...info
   })
 }
+
+export const getProxyInfo = () => {
+  const {
+    proxyAddressHttp
+  } = store
+  return {
+    proxyAddressHttp
+  }
+}
+
+export const updateProxyInfo = (info: {
+  proxyAddressHttp: string
+}) => {
+  save({
+    ...store,
+    ...info
+  })
+}

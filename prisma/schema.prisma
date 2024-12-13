@@ -34,7 +34,7 @@ model PostForward {
   link            String
   forwardAt       DateTime @default(now())
   forwardConfigId String
-  post            Post     @relation("PostForwards", fields: [postId], references: [id])
+  post            Post     @relation("PostForwards", fields: [postId], references: [id], onDelete: Cascade)
   postId          String
 }
 
@@ -44,7 +44,7 @@ model PostImport {
   platformPostId String
   link           String
   importedAt     DateTime @default(now())
-  post           Post     @relation("PostImports", fields: [postId], references: [id])
+  post           Post     @relation("PostImports", fields: [postId], references: [id], onDelete: Cascade)
   postId         String
 }
 
@@ -68,6 +68,6 @@ model ImageImport {
   platformImageId String
   link            String
   importedAt      DateTime @default(now())
-  image           Image    @relation("ImageImports", fields: [imageId], references: [id])
+  image           Image    @relation("ImageImports", fields: [imageId], references: [id], onDelete: Cascade)
   imageId         String
 }

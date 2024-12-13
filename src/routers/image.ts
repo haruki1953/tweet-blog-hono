@@ -1,6 +1,6 @@
 import { AppError } from '@/classes'
-import { imageDeleteOriginalParamSchema, imageDeleteParamSchema, imageGetByCursorParamSchema, imageGetByCursorQuerySchema, imageGetByIdParamSchema, imageUpdateConfigJsonSchema, imageUpdateJsonSchema } from '@/schemas'
-import { imageDeleteAllOriginalService, imageDeleteAllService, imageDeleteOriginalService, imageDeleteService, imageGetByCursorService, imageGetByIdService, imageGetConfigService, imageSendService, imageUpdateConfigService, imageUpdateService } from '@/services'
+import { imageDeleteOriginalParamSchema, imageDeleteParamSchema, imageGetByCursorParamSchema, imageGetByCursorQuerySchema, imageGetByIdParamSchema, imageUpdateJsonSchema } from '@/schemas'
+import { imageDeleteAllOriginalService, imageDeleteAllService, imageDeleteOriginalService, imageDeleteService, imageGetByCursorService, imageGetByIdService, imageSendService, imageUpdateService } from '@/services'
 import { useAdminSystem } from '@/systems'
 import { type UserJwtVariables } from '@/types'
 import { handleImageInFormData, handleResData, zValWEH } from '@/helpers'
@@ -47,27 +47,27 @@ router.patch(
   }
 )
 
-router.get(
-  '/config',
-  (c) => {
-    const data = imageGetConfigService()
-    c.status(200)
-    return c.json(handleResData(0, '获取成功', data))
-  }
-)
+// router.get(
+//   '/config',
+//   (c) => {
+//     const data = imageGetConfigService()
+//     c.status(200)
+//     return c.json(handleResData(0, '获取成功', data))
+//   }
+// )
 
-router.put(
-  '/config',
-  zValWEH('json', imageUpdateConfigJsonSchema),
-  (c) => {
-    const configInfo = c.req.valid('json')
+// router.put(
+//   '/config',
+//   zValWEH('json', imageUpdateConfigJsonSchema),
+//   (c) => {
+//     const configInfo = c.req.valid('json')
 
-    imageUpdateConfigService(configInfo)
+//     imageUpdateConfigService(configInfo)
 
-    c.status(200)
-    return c.json(handleResData(0, '修改成功'))
-  }
-)
+//     c.status(200)
+//     return c.json(handleResData(0, '修改成功'))
+//   }
+// )
 
 router.delete(
   '/id/:id',

@@ -22,6 +22,11 @@ export const adminUpdateInfoJsonSchema = z.object({
   loginLockSeconds: z.number().int().positive()
 })
 
-// type AdminLoginJsonType = z.infer<typeof adminLoginJsonSchema>
-// type AdminUpdateAuthJsonType = z.infer<typeof adminUpdateAuthJsonSchema>
-// type adminUpdateInfoJsonType = z.infer<typeof adminUpdateInfoJsonSchema>
+export type AdminLoginJsonType = z.infer<typeof adminLoginJsonSchema>
+export type AdminUpdateAuthJsonType = z.infer<typeof adminUpdateAuthJsonSchema>
+export type AdminUpdateInfoJsonType = z.infer<typeof adminUpdateInfoJsonSchema>
+
+export const adminUpdateProxyJsonSchema = z.object({
+  proxyAddressHttp: z.string()
+})
+export type AdminUpdateProxyJsonType = z.infer<typeof adminUpdateProxyJsonSchema>

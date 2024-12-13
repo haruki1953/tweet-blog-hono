@@ -1,5 +1,5 @@
-import { adminUpdateAuthJsonSchema, adminUpdateInfoJsonSchema } from '@/schemas'
-import { adminGetInfoService, adminUpdateAuthService, adminUpdateInfoService } from '@/services'
+import { adminUpdateAuthJsonSchema, adminUpdateInfoJsonSchema, adminUpdateProxyJsonSchema, imageUpdateConfigJsonSchema } from '@/schemas'
+import { adminGetInfoService, adminUpdateAuthService, adminUpdateInfoService, adminUpdateProxyService, imageUpdateConfigService } from '@/services'
 import { useAdminSystem } from '@/systems'
 import { type UserJwtVariables } from '@/types'
 import { handleResData, zValWEH } from '@/helpers'
@@ -48,8 +48,35 @@ router.put(
     const adminInfo = c.req.valid('json')
 
     adminUpdateInfoService(adminInfo)
+    const data = adminGetInfoService()
     c.status(200)
-    return c.json(handleResData(0, '修改成功'))
+    return c.json(handleResData(0, '修改成功', data))
+  }
+)
+
+router.put(
+  '/proxy',
+  zValWEH('json', adminUpdateProxyJsonSchema),
+  (c) => {
+    const proxyInfo = c.req.valid('json')
+
+    adminUpdateProxyService(proxyInfo)
+    const data = adminGetInfoService()
+    c.status(200)
+    return c.json(handleResData(0, '修改成功', data))
+  }
+)
+
+router.put(
+  '/image',
+  zValWEH('json', imageUpdateConfigJsonSchema),
+  (c) => {
+    const configInfo = c.req.valid('json')
+
+    imageUpdateConfigService(configInfo)
+    const data = adminGetInfoService()
+    c.status(200)
+    return c.json(handleResData(0, '修改成功', data))
   }
 )
 

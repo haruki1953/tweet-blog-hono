@@ -130,6 +130,7 @@ export const postDeleteService = async (id: PostPrisma['id'], query: PostDeleteQ
     if (error.code === 'P2025') {
       throw new AppError('帖子不在回收站中', 400)
     }
+    console.log(error)
     throw new AppError('帖子删除失败')
   })
 
@@ -159,7 +160,10 @@ export const postDeleteAllService = async (query: PostDeleteAllQueryType) => {
   // del one by one, to avert unexpected error
   const results = []
   for (const p of posts) {
-    const result = await postDeleteService(p.id, query)
+    const result = await postDeleteService(p.id, query).catch(() => null)
+    if (result == null) {
+      continue
+    }
     results.push(result)
   }
   return results

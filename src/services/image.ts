@@ -1,14 +1,12 @@
 import { AppError } from '@/classes'
 import { type ImageGetByCursorQueryType, type ImageUpdateConfigJsonType, type ImageUpdateJsonType } from '@/schemas'
-import { prisma, useImageSystem } from '@/systems'
+import { prisma, useFetchSystem, useImageSystem } from '@/systems'
 import { deleteImageByIdWhereNonePost } from './base'
 import { postConfig } from '@/configs'
 import { type ImagePrisma } from '@/types'
 
-import fetch from 'node-fetch'
-import { HttpsProxyAgent } from 'https-proxy-agent'
-
 const imageSystem = useImageSystem()
+const fetchSystem = useFetchSystem()
 
 export const imageSendService = async (
   imageFile: File | Blob
@@ -35,20 +33,10 @@ export const imageSendService = async (
 export const imageSendByUrlService = async (
   imageUrl: string
 ) => {
-  const imageBlob = await imageUrlToBlob(imageUrl)
-  return await imageSendService(imageBlob)
-}
-
-const imageUrlToBlob = async (url: string) => {
-  // 暂时试验，之后完成代理设置接口后完善
-  const response = await fetch(url, {
-    agent: new HttpsProxyAgent('http://127.0.0.1:10809/')
-  }).catch(() => {
+  const imageBlob = await fetchSystem.baseBlobApi(imageUrl).catch(() => {
     throw new AppError('图片获取失败', 500)
-    // throw error
   })
-  const blob = await response.blob()
-  return blob
+  return await imageSendService(imageBlob)
 }
 
 export const imageUpdateService = async (

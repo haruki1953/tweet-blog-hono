@@ -1,7 +1,9 @@
-import { useAdminSystem } from '@/systems'
+import { useAdminSystem, useImageSystem } from '@/systems'
 import { generateTokenAdmin } from './base'
+import { type AdminUpdateInfoJsonType, type AdminUpdateProxyJsonType } from '@/schemas'
 
 const adminSystem = useAdminSystem()
+const imageSystem = useImageSystem()
 
 export const adminLoginService = async (
   username: string, password: string
@@ -18,20 +20,26 @@ export const adminUpdateAuthService = (
 }
 
 export const adminGetInfoService = () => {
-  const adminInfo = adminSystem.getAdminInfo()
   const isAuthDefault = adminSystem.isAuthDefault()
+  const adminInfo = adminSystem.getAdminInfo()
+  const proxyInfo = adminSystem.getProxyInfo()
+  const imageConfig = imageSystem.getImageConfig()
   return {
+    isAuthDefault,
     ...adminInfo,
-    isAuthDefault
+    ...proxyInfo,
+    ...imageConfig
   }
 }
 
 export const adminUpdateInfoService = (
-  adminInfo: {
-    jwtAdminExpSeconds: number
-    loginMaxFailCount: number
-    loginLockSeconds: number
-  }
+  adminInfo: AdminUpdateInfoJsonType
 ) => {
   adminSystem.updateAdminInfo(adminInfo)
+}
+
+export const adminUpdateProxyService = (
+  json: AdminUpdateProxyJsonType
+) => {
+  adminSystem.updateProxyInfo(json)
 }

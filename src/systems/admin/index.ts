@@ -6,7 +6,9 @@ import {
   getJwtAdminExpSeconds,
   getJwtAdminSecretKey,
   getAdminInfo,
-  updateAdminInfo
+  updateAdminInfo,
+  getProxyInfo,
+  updateProxyInfo
 } from './services'
 
 export const useAdminSystem = () => {
@@ -17,6 +19,8 @@ export const useAdminSystem = () => {
     getJwtAdminSecretKey,
     getJwtAdminExpSeconds,
     getAdminInfo,
-    updateAdminInfo
+    updateAdminInfo,
+    getProxyInfo,
+    updateProxyInfo
   }
 }
