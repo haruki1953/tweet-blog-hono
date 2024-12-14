@@ -24,10 +24,10 @@ router.post(
   async (c) => {
     const json = c.req.valid('json')
 
-    postControlImportService(json).catch(() => {})
+    const data = await postControlImportService(json)
 
     c.status(200)
-    return c.json(handleResData(0, '正在导入'))
+    return c.json(handleResData(0, '正在导入', data))
   }
 )
 

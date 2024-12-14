@@ -1,14 +1,17 @@
-import { adminUpdateAuthJsonSchema, adminUpdateInfoJsonSchema, adminUpdateProxyJsonSchema, imageUpdateConfigJsonSchema } from '@/schemas'
-import { adminGetInfoService, adminUpdateAuthService, adminUpdateInfoService, adminUpdateProxyService, imageUpdateConfigService } from '@/services'
+import { adminProxyTestJsonSchema, adminUpdateAuthJsonSchema, adminUpdateInfoJsonSchema, adminUpdateProxyJsonSchema, imageUpdateConfigJsonSchema } from '@/schemas'
+import { adminGetInfoService, adminProxyTestService, adminUpdateAuthService, adminUpdateInfoService, adminUpdateProxyService, imageUpdateConfigService } from '@/services'
 import { useAdminSystem } from '@/systems'
 import { type UserJwtVariables } from '@/types'
 import { handleResData, zValWEH } from '@/helpers'
 import { Hono } from 'hono'
 import { jwt } from 'hono/jwt'
+import { useTaskSystem } from '@/systems/task'
 
 const router = new Hono<{ Variables: UserJwtVariables }>()
 
 const adminSystem = useAdminSystem()
+const taskSystem = useTaskSystem()
+
 // router.use(jwt({ secret: adminSystem.getJwtAdminSecretKey() }))
 router.use(async (c, next) => {
   // 动态获取最新的 JWT 密钥
@@ -67,6 +70,19 @@ router.put(
   }
 )
 
+router.post(
+  '/proxy-test',
+  zValWEH('json', adminProxyTestJsonSchema),
+  async (c) => {
+    const json = c.req.valid('json')
+
+    const data = await adminProxyTestService(json)
+
+    c.status(200)
+    return c.json(handleResData(0, '修改成功', data))
+  }
+)
+
 router.put(
   '/image',
   zValWEH('json', imageUpdateConfigJsonSchema),
@@ -77,6 +93,18 @@ router.put(
     const data = adminGetInfoService()
     c.status(200)
     return c.json(handleResData(0, '修改成功', data))
+  }
+)
+
+router.get(
+  'task',
+  (c) => {
+    const taskCache = taskSystem.taskCache()
+    const data = {
+      taskCache
+    }
+    c.status(200)
+    return c.json(handleResData(0, '获取成功', data))
   }
 )
 

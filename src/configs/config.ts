@@ -12,6 +12,10 @@ export const postConfig = {
   imageNumInPage: 20
 } as const
 
+export const fetchProxyConfig = {
+  testUrlDefault: 'https://www.google.com'
+}
+
 // 关于导入与导出，平台所代表字段
 export const platformKeyMap = {
   x: {

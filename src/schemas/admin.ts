@@ -30,3 +30,8 @@ export const adminUpdateProxyJsonSchema = z.object({
   proxyAddressHttp: z.string()
 })
 export type AdminUpdateProxyJsonType = z.infer<typeof adminUpdateProxyJsonSchema>
+
+export const adminProxyTestJsonSchema = z.object({
+  testAddress: z.string()
+})
+export type AdminProxyTestJsonType = z.infer<typeof adminProxyTestJsonSchema>

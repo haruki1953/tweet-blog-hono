@@ -1,9 +1,11 @@
-import { useAdminSystem, useImageSystem } from '@/systems'
+import { useAdminSystem, useFetchSystem, useImageSystem } from '@/systems'
 import { generateTokenAdmin } from './base'
-import { type AdminUpdateInfoJsonType, type AdminUpdateProxyJsonType } from '@/schemas'
+import { type AdminProxyTestJsonType, type AdminUpdateInfoJsonType, type AdminUpdateProxyJsonType } from '@/schemas'
+import { AppError } from '@/classes'
 
 const adminSystem = useAdminSystem()
 const imageSystem = useImageSystem()
+const fetchSystem = useFetchSystem()
 
 export const adminLoginService = async (
   username: string, password: string
@@ -42,4 +44,12 @@ export const adminUpdateProxyService = (
   json: AdminUpdateProxyJsonType
 ) => {
   adminSystem.updateProxyInfo(json)
+}
+
+export const adminProxyTestService = async (
+  json: AdminProxyTestJsonType
+) => {
+  return await fetchSystem.baseTestApi(json.testAddress).catch(() => {
+    throw new AppError('测试失败')
+  })
 }

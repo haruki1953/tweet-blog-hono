@@ -2,16 +2,37 @@ import { type PostControlImportJsonType } from '@/schemas/post-control'
 import { prisma } from '@/systems'
 import { imageSendByUrlService, imageUpdateService, postSendService, postUpdateService } from './dependencies'
 import { type ImagePrisma } from '@/types'
+import { useTaskSystem } from '@/systems/task'
+
+const taskSystem = useTaskSystem()
 
 // 帖子导入服务
 export const postControlImportService = async (json: PostControlImportJsonType) => {
   const { importPosts } = json
-  // 遍历，导入帖子
-  for (const post of importPosts) {
-    const postinfo = await postControlImportServicePostImportPart(post).catch(() => null)
-    console.log(postinfo)
+  // 创建任务，用于保存导入进度
+  const importTask = taskSystem.importTaskCreate({
+    totalCount: importPosts.length
+  })
+  ;(async () => {
+    // 遍历，导入帖子
+    let completedCount = 0
+    for (const post of importPosts) {
+      const postinfo = await postControlImportServicePostImportPart(post).catch(() => null)
+      completedCount += 1
+      // 更新任务信息
+      taskSystem.importTaskUpdate(importTask.uuid, {
+        completedCount
+      })
+      console.log(postinfo)
+    }
+    // 任务完成，删除
+    taskSystem.importTaskDelete(importTask.uuid)
+    console.log('导入完毕')
+  })().catch(() => {})
+  return {
+    importTask,
+    taskCache: taskSystem.taskCache()
   }
-  console.log('导入完毕')
 }
 
 // 帖子导入服务：帖子导入部分

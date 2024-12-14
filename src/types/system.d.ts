@@ -14,3 +14,12 @@ export type AdminStore = z.infer<typeof typesAdminStoreSchema>
 export type FileStore = z.infer<typeof typesFileStoreSchema>
 
 export type ProfileStore = z.infer<typeof typesProfileStoreSchema>
+
+export interface TaskCache {
+  importTaskList: Array<{
+    uuid: string
+    startAt: string
+    totalCount: number
+    completedCount: number
+  }>
+}
