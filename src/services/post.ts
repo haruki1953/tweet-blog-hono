@@ -187,6 +187,8 @@ export const postGetByIdService = async (
     where: { id, isDeleted: isDelWhereVal },
     include: {
       ...postIncludeBase,
+      postImports: true,
+      postForwards: true,
       parentPost: {
         where: { isDeleted: isDelWhereVal },
         include: {

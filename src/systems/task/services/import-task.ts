@@ -11,7 +11,7 @@ export const importTaskCreate = (data: ImportTaskItemForCreateData) => {
   const {
     uuid = uuidv4(),
     startAt = new Date().toISOString(),
-    totalCount = 0,
+    totalCount = 1,
     completedCount = 0
   } = data
 

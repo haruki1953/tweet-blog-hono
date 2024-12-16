@@ -32,7 +32,7 @@ const avatarSavePath = path.join(systemPublicPath, 'avatar/')
 const iconSavePath = path.join(systemPublicPath, 'icon/')
 
 const storeDefaultFile: z.infer<typeof typesFileStoreSchema> = {
-  imageLargeMaxLength: 1600,
+  imageLargeMaxLength: 3000,
   imageSmallMaxLength: 600,
   imageQuality: 90
 }
