@@ -17,7 +17,7 @@ const storeDefaultAdmin: z.infer<typeof typesAdminStoreSchema> = {
   jwtAdminSecretKey: 'Will randomly generate',
   jwtAdminExpSeconds: 10 * 24 * 60 * 60, // Token expires in 10 days
   loginMaxFailCount: 10,
-  loginLockSeconds: 1 * 60 * 60, // 1hour
+  loginLockSeconds: 10 * 60 * 60, // 10hour
   proxyAddressHttp: ''
 }
 export const systemAdminConfig = {

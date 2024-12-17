@@ -1,11 +1,11 @@
 import { } from '@/schemas'
-import { postControlImportService } from '@/services'
+import { postControlDeleteImportDataService, postControlDeleteImportExcessService, postControlImportService } from '@/services'
 import { useAdminSystem } from '@/systems'
 import { type UserJwtVariables } from '@/types'
 import { handleResData, zValWEH } from '@/helpers'
 import { Hono } from 'hono'
 import { jwt } from 'hono/jwt'
-import { postControlImportJsonSchema } from '@/schemas/post-control'
+import { postControlDeleteImportDataParamSchema, postControlImportJsonSchema } from '@/schemas/post-control'
 
 const router = new Hono<{ Variables: UserJwtVariables }>()
 
@@ -28,6 +28,29 @@ router.post(
 
     c.status(200)
     return c.json(handleResData(0, '正在导入', data))
+  }
+)
+
+router.delete(
+  '/import-data/id/:id',
+  zValWEH('param', postControlDeleteImportDataParamSchema),
+  async (c) => {
+    const { id } = c.req.valid('param')
+
+    const data = await postControlDeleteImportDataService(id)
+
+    c.status(200)
+    return c.json(handleResData(0, '删除成功', data))
+  }
+)
+
+router.delete(
+  '/import-data/excess',
+  async (c) => {
+    const data = await postControlDeleteImportExcessService()
+
+    c.status(200)
+    return c.json(handleResData(0, '删除成功', data))
   }
 )
 

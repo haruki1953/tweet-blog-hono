@@ -1,5 +1,6 @@
 import { platformKeyEnum } from '@/configs'
 import { z } from 'zod'
+import { idParamSchema, type IdParamType } from './base'
 // import { type IdParamType, idParamSchema } from './base'
 
 export const postControlImportJsonSchema = z.object({
@@ -21,3 +22,6 @@ export const postControlImportJsonSchema = z.object({
   }))
 })
 export type PostControlImportJsonType = z.infer<typeof postControlImportJsonSchema>
+
+export const postControlDeleteImportDataParamSchema = idParamSchema
+export type PostControlDeleteImportDataParamType = IdParamType
