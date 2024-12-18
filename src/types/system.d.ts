@@ -1,4 +1,4 @@
-import { type typesFileStoreSchema, type typesAdminStoreSchema, type typesProfileStoreSchema } from '@/schemas'
+import { type typesFileStoreSchema, type typesAdminStoreSchema, type typesProfileStoreSchema, type typesForwardStoreSchema, type forwardSettingItemSchema, type forwardSettingItemForSetSchema } from '@/schemas'
 import { type z } from 'zod'
 
 export type AdminStore = z.infer<typeof typesAdminStoreSchema>
@@ -23,3 +23,7 @@ export interface TaskCache {
     completedCount: number
   }>
 }
+
+export type ForwardStore = z.infer<typeof typesForwardStoreSchema>
+export type ForwardSettingItem = z.infer<typeof forwardSettingItemSchema>
+export type ForwardSettingItemForSet = z.infer<typeof forwardSettingItemForSetSchema>

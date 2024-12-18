@@ -1,7 +1,6 @@
-import { type typesFileStoreSchema, type typesAdminStoreSchema, type typesProfileStoreSchema } from '@/schemas'
+import { type AdminStore, type FileStore, type ForwardStore, type ProfileStore } from '@/types'
 import { cloneDeep } from 'lodash'
 import path from 'path'
-import { type z } from 'zod'
 // import { fileURLToPath } from 'url'
 
 // // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -11,7 +10,7 @@ import { type z } from 'zod'
 
 export const systemDataPath = path.join(__dirname, '../../data/')
 
-const storeDefaultAdmin: z.infer<typeof typesAdminStoreSchema> = {
+const storeDefaultAdmin: AdminStore = {
   username: 'admin',
   password: 'adminadmin',
   jwtAdminSecretKey: 'Will randomly generate',
@@ -31,7 +30,7 @@ const imageSavePath = path.join(systemPublicPath, 'image/')
 const avatarSavePath = path.join(systemPublicPath, 'avatar/')
 const iconSavePath = path.join(systemPublicPath, 'icon/')
 
-const storeDefaultFile: z.infer<typeof typesFileStoreSchema> = {
+const storeDefaultFile: FileStore = {
   imageLargeMaxLength: 3000,
   imageSmallMaxLength: 600,
   imageQuality: 90
@@ -48,7 +47,7 @@ export const systemFileConfig = {
   iconSavePath
 }
 
-const storeDefaultProfile: z.infer<typeof typesProfileStoreSchema> = {
+const storeDefaultProfile: ProfileStore = {
   avatar: null,
   avatarArray: [],
   name: '',
@@ -61,4 +60,12 @@ const storeDefaultProfile: z.infer<typeof typesProfileStoreSchema> = {
 export const systemProfileConfig = {
   storeFile: path.join(systemDataPath, 'profile.json'),
   storeDefault: () => cloneDeep(storeDefaultProfile)
+}
+
+const storeDefaultForward: ForwardStore = {
+  forwardSettingList: []
+}
+export const systemForwardConfig = {
+  storeFile: path.join(systemDataPath, 'forward.json'),
+  storeDefault: () => cloneDeep(storeDefaultForward)
 }

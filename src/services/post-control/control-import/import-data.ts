@@ -16,33 +16,59 @@ export const postControlDeleteImportDataService = async (id: string) => {
 
 // 多余的导入记录删除
 export const postControlDeleteImportExcessService = async () => {
-  // 1. 获取每个帖子和link组合的最新importedAt
-  const latestImports = await prisma.postImport.groupBy({
-    by: ['postId', 'link'],
+  // 1. 获取每个帖子id和导入平台帖子id组合的最新importedAt
+  const latestPostImports = await prisma.postImport.groupBy({
+    by: ['postId', 'platformPostId'],
+    _max: {
+      importedAt: true
+    }
+  })
+  // 图片的导入记录也要查找并删除
+  const latestImageImports = await prisma.imageImport.groupBy({
+    by: ['imageId', 'platformImageId'],
     _max: {
       importedAt: true
     }
   })
 
   // 构建删除条件
-  const deleteConditions = []
-  for (const item of latestImports) {
+  const deleteConditionsPostImports = []
+  for (const item of latestPostImports) {
     if (item._max.importedAt == null) {
       continue
     }
-    deleteConditions.push({
+    deleteConditionsPostImports.push({
       postId: item.postId,
-      link: item.link,
+      platformPostId: item.platformPostId,
+      NOT: {
+        importedAt: item._max.importedAt
+      }
+    })
+  }
+  const deleteConditionsImageImports = []
+  for (const item of latestImageImports) {
+    if (item._max.importedAt == null) {
+      continue
+    }
+    deleteConditionsImageImports.push({
+      imageId: item.imageId,
+      platformImageId: item.platformImageId,
       NOT: {
         importedAt: item._max.importedAt
       }
     })
   }
 
-  // 2. 删除不是最新的PostImport记录
-  const { count } = await prisma.postImport.deleteMany({
-    where: { OR: deleteConditions }
+  // 2. 删除不是最新的导入记录
+  const postImport = await prisma.postImport.deleteMany({
+    where: { OR: deleteConditionsPostImports }
+  })
+  const imageImport = await prisma.imageImport.deleteMany({
+    where: { OR: deleteConditionsImageImports }
   })
 
-  return { count }
+  return {
+    postImport,
+    imageImport
+  }
 }

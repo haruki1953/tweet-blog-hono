@@ -1,3 +1,4 @@
+import { platformKeyMap } from '@/configs'
 import { z } from 'zod'
 
 export const typesAdminStoreSchema = z.object({
@@ -49,4 +50,47 @@ export const typesProfileStoreSchema = z.object({
     size: z.number(),
     addAt: z.coerce.date()
   }))
+})
+
+// 定义转发配置基础
+export const forwardSettingBaseSchema = z.object({
+  uuid: z.string(),
+  name: z.string()
+})
+// 定义 ForwardConfigX
+export const forwardSettingXSchema = forwardSettingBaseSchema.extend({
+  platform: z.literal(platformKeyMap.X.key),
+  data: z.object({
+    token1: z.string()
+  })
+})
+// 将被用于设置接口，data可选
+export const forwardSettingXForSetSchema = forwardSettingXSchema.extend({
+  data: forwardSettingXSchema.shape.data.optional()
+})
+
+export const forwardSettingTSchema = forwardSettingBaseSchema.extend({
+  platform: z.literal(platformKeyMap.T.key),
+  data: z.object({
+    token2: z.string()
+  })
+})
+export const forwardSettingTForSetSchema = forwardSettingTSchema.extend({
+  data: forwardSettingTSchema.shape.data.optional()
+})
+
+// 合并后forwardSettingList的项
+export const forwardSettingItemSchema = z.union([
+  forwardSettingXSchema,
+  forwardSettingTSchema
+])
+// export const forwardSettingItemSchema = forwardSettingXSchema
+export const forwardSettingItemForSetSchema = z.union([
+  forwardSettingXForSetSchema,
+  forwardSettingTForSetSchema
+])
+// export const forwardSettingItemForSetSchema = forwardSettingXForSetSchema
+// ForwardStore
+export const typesForwardStoreSchema = z.object({
+  forwardSettingList: z.array(forwardSettingItemSchema)
 })
