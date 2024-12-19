@@ -5,7 +5,8 @@ import { type UserJwtVariables } from '@/types'
 import { handleResData, zValWEH } from '@/helpers'
 import { Hono } from 'hono'
 import { jwt } from 'hono/jwt'
-import { postControlDeleteImportDataParamSchema, postControlImportJsonSchema } from '@/schemas/post-control'
+import { postControlDeleteImportDataParamSchema, postControlForwardSettingSetJsonSchema, postControlImportJsonSchema } from '@/schemas/post-control'
+import { postControlForwardGetService, postControlForwardSettingSetService } from '@/services/post-control/control-forward'
 
 const router = new Hono<{ Variables: UserJwtVariables }>()
 
@@ -51,6 +52,28 @@ router.delete(
 
     c.status(200)
     return c.json(handleResData(0, '删除成功', data))
+  }
+)
+
+router.get(
+  '/forward',
+  async (c) => {
+    const data = postControlForwardGetService()
+
+    c.status(200)
+    return c.json(handleResData(0, '获取成功', data))
+  }
+)
+
+router.put(
+  '/forward-setting',
+  zValWEH('json', postControlForwardSettingSetJsonSchema),
+  async (c) => {
+    const json = c.req.valid('json')
+    const data = postControlForwardSettingSetService(json)
+
+    c.status(200)
+    return c.json(handleResData(0, '设置成功', data))
   }
 )
 

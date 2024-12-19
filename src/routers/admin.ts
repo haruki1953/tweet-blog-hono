@@ -1,16 +1,14 @@
 import { adminProxyTestJsonSchema, adminUpdateAuthJsonSchema, adminUpdateInfoJsonSchema, adminUpdateProxyJsonSchema, imageUpdateConfigJsonSchema } from '@/schemas'
-import { adminGetInfoService, adminProxyTestService, adminUpdateAuthService, adminUpdateInfoService, adminUpdateProxyService, imageUpdateConfigService } from '@/services'
+import { adminGetInfoService, adminGetTaskService, adminProxyTestService, adminUpdateAuthService, adminUpdateInfoService, adminUpdateProxyService, imageUpdateConfigService } from '@/services'
 import { useAdminSystem } from '@/systems'
 import { type UserJwtVariables } from '@/types'
 import { handleResData, zValWEH } from '@/helpers'
 import { Hono } from 'hono'
 import { jwt } from 'hono/jwt'
-import { useTaskSystem } from '@/systems/task'
 
 const router = new Hono<{ Variables: UserJwtVariables }>()
 
 const adminSystem = useAdminSystem()
-const taskSystem = useTaskSystem()
 
 // router.use(jwt({ secret: adminSystem.getJwtAdminSecretKey() }))
 router.use(async (c, next) => {
@@ -99,10 +97,7 @@ router.put(
 router.get(
   'task',
   (c) => {
-    const taskCache = taskSystem.taskCache()
-    const data = {
-      taskCache
-    }
+    const data = adminGetTaskService()
     c.status(200)
     return c.json(handleResData(0, '获取成功', data))
   }

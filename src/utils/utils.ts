@@ -53,3 +53,20 @@ export const getFileExtension = (filename: string) => {
   const match = filename.match(/(\.[a-zA-Z0-9]+)$/)
   return (match != null) ? match[1] : ''
 }
+
+// 处理敏感的令牌
+export const maskSensitiveToken = (token: string) => {
+  if (token.length > 10) {
+    // 保留后6个字符
+    const lastSix = token.slice(-6)
+    // 前面加上4个星号
+    const maskedToken = '****' + lastSix
+    return maskedToken
+  } else {
+    // 去除前4个字符
+    const trimmedToken = token.slice(4)
+    // 前面加上4个星号
+    const maskedToken = '****' + trimmedToken
+    return maskedToken
+  }
+}

@@ -2,10 +2,12 @@ import { useAdminSystem, useFetchSystem, useImageSystem } from '@/systems'
 import { generateTokenAdmin } from './base'
 import { type AdminProxyTestJsonType, type AdminUpdateInfoJsonType, type AdminUpdateProxyJsonType } from '@/schemas'
 import { AppError } from '@/classes'
+import { useTaskSystem } from '@/systems/task'
 
 const adminSystem = useAdminSystem()
 const imageSystem = useImageSystem()
 const fetchSystem = useFetchSystem()
+const taskSystem = useTaskSystem()
 
 export const adminLoginService = async (
   username: string, password: string
@@ -52,4 +54,11 @@ export const adminProxyTestService = async (
   return await fetchSystem.baseTestApi(json.testAddress).catch(() => {
     throw new AppError('测试失败')
   })
+}
+
+export const adminGetTaskService = () => {
+  const taskCache = taskSystem.taskCache()
+  return {
+    taskCache
+  }
 }

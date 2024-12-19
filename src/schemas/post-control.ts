@@ -1,6 +1,7 @@
 import { platformKeyEnum } from '@/configs'
 import { z } from 'zod'
 import { idParamSchema, type IdParamType } from './base'
+import { forwardSettingListForSetSchema } from './types'
 // import { type IdParamType, idParamSchema } from './base'
 
 export const postControlImportJsonSchema = z.object({
@@ -25,3 +26,8 @@ export type PostControlImportJsonType = z.infer<typeof postControlImportJsonSche
 
 export const postControlDeleteImportDataParamSchema = idParamSchema
 export type PostControlDeleteImportDataParamType = IdParamType
+
+export const postControlForwardSettingSetJsonSchema = z.object({
+  forwardSettingList: forwardSettingListForSetSchema
+})
+export type PostControlForwardSettingSetJsonType = z.infer<typeof postControlForwardSettingSetJsonSchema>
