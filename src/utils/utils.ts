@@ -70,3 +70,9 @@ export const maskSensitiveToken = (token: string) => {
     return maskedToken
   }
 }
+
+// 检查是否重复
+export const checkForDuplicateStrings = (arr: string[]) => {
+  const set = new Set(arr)
+  return set.size !== arr.length
+}

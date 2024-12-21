@@ -1,12 +1,6 @@
-import { type AdminStore, type FileStore, type ForwardStore, type ProfileStore } from '@/types'
+import type { AdminStore, FileStore, ForwardStore, ProfileStore } from '@/types'
 import { cloneDeep } from 'lodash'
 import path from 'path'
-// import { fileURLToPath } from 'url'
-
-// // eslint-disable-next-line @typescript-eslint/naming-convention
-// const __filename = fileURLToPath(import.meta.url)
-// // eslint-disable-next-line @typescript-eslint/naming-convention
-// const __dirname = path.dirname(__filename)
 
 export const systemDataPath = path.join(__dirname, '../../data/')
 
@@ -14,9 +8,9 @@ const storeDefaultAdmin: AdminStore = {
   username: 'admin',
   password: 'adminadmin',
   jwtAdminSecretKey: 'Will randomly generate',
-  jwtAdminExpSeconds: 10 * 24 * 60 * 60, // Token expires in 10 days
+  jwtAdminExpSeconds: 10 * 24 * 60 * 60, // 10 days
   loginMaxFailCount: 10,
-  loginLockSeconds: 10 * 60 * 60, // 10hour
+  loginLockSeconds: 10 * 60 * 60, // 10 hours
   proxyAddressHttp: ''
 }
 export const systemAdminConfig = {

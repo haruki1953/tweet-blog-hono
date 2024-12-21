@@ -2,7 +2,7 @@ import { type ForwardSettingItem, type ForwardSettingItemForSet } from '@/types'
 import { store, save } from './dependencies'
 import { AppError } from '@/classes'
 import { cloneDeep } from 'lodash'
-import { maskSensitiveToken } from '@/utils'
+import { checkForDuplicateStrings, maskSensitiveToken } from '@/utils'
 
 export const forwardSettingFind = (uuid: string) => {
   return store.forwardSettingList.find(i => i.uuid === uuid)
@@ -13,25 +13,6 @@ export const forwardSettingGet = () => {
   const processedList: ForwardSettingItem[] = []
   const tempList = cloneDeep(store.forwardSettingList)
   for (const item of tempList) {
-    // let processedItem
-    // if (item.platform === platformKeyMap.X.key) {
-    //   // X
-    //   processedItem = {
-    //     ...item,
-    //     data: {
-    //       token1: maskSensitiveToken(item.data.token1)
-    //     }
-    //   }
-    // } else {
-    //   // T 测试
-    //   processedItem = {
-    //     ...item,
-    //     data: {
-    //       token2: maskSensitiveToken(item.data.token2)
-    //     }
-    //   }
-    // }
-    // processedList.push(processedItem)
     for (const key in item.data) {
       ; (item.data as Record<string, string>)[key] =
         maskSensitiveToken((item.data as Record<string, string>)[key])
@@ -43,6 +24,9 @@ export const forwardSettingGet = () => {
 
 // 设置转发配置，item.data可为undefined，即不更改
 export const forwardSettingSet = (forwardSettingList: ForwardSettingItemForSet[]) => {
+  if (checkForDuplicateStrings(forwardSettingList.map(i => i.uuid))) {
+    throw new AppError('添加转发配置时uuid不能重复', 400)
+  }
   const newForwardSettingList = []
   for (const item of forwardSettingList) {
     let newItem
@@ -53,7 +37,9 @@ export const forwardSettingSet = (forwardSettingList: ForwardSettingItemForSet[]
         throw new AppError('更新转发配置时平台不能变更', 400)
       }
       newItem = cloneDeep(find)
+      // 只更新name。uuid 和 platform 都不能更改
       newItem.name = item.name
+      // data 有值时才更新
       if (item.data != null) {
         newItem.data = item.data
       }
@@ -63,7 +49,7 @@ export const forwardSettingSet = (forwardSettingList: ForwardSettingItemForSet[]
         return item.data != null
       })(item)
       if (!isItemDataNotNull) {
-        throw new AppError('添加转发配置时令牌数据不能为空', 400)
+        throw new AppError('添加转发配置时数据不能为空', 400)
       }
       newItem = item
     }
