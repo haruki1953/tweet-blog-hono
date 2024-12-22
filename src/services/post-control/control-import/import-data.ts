@@ -9,7 +9,7 @@ export const postControlDeleteImportDataService = async (id: string) => {
       throw new AppError('导入记录不存在', 400)
     }
     console.log(error)
-    throw new AppError('帖子删除失败')
+    throw new AppError('导入记录删除失败')
   })
   return data
 }
@@ -69,6 +69,26 @@ export const postControlDeleteImportExcessService = async () => {
 
   return {
     postImport,
+    imageImport
+  }
+}
+
+export const postControlDeleteImportAllPostService = async () => {
+  const postImport = await prisma.postImport.deleteMany()
+  return {
+    postImport,
+    imageImport: {
+      count: 0
+    }
+  }
+}
+
+export const postControlDeleteImportAllImageService = async () => {
+  const imageImport = await prisma.imageImport.deleteMany()
+  return {
+    postImport: {
+      count: 0
+    },
     imageImport
   }
 }

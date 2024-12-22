@@ -1,12 +1,12 @@
 import { } from '@/schemas'
-import { postControlDeleteImportDataService, postControlDeleteImportExcessService, postControlImportService } from '@/services'
+import { postControlDeleteImportAllImageService, postControlDeleteImportAllPostService, postControlDeleteImportDataService, postControlDeleteImportExcessService, postControlImportService } from '@/services'
 import { useAdminSystem } from '@/systems'
 import { type UserJwtVariables } from '@/types'
 import { handleResData, zValWEH } from '@/helpers'
 import { Hono } from 'hono'
 import { jwt } from 'hono/jwt'
-import { postControlDeleteImportDataParamSchema, postControlForwardSettingSetJsonSchema, postControlImportJsonSchema } from '@/schemas/post-control'
-import { postControlForwardGetService, postControlForwardSettingSetService } from '@/services/post-control/control-forward'
+import { postControlDeleteForwardDataParamSchema, postControlDeleteImportDataParamSchema, postControlForwardManualLinkingJsonSchema, postControlForwardSettingSetJsonSchema, postControlImportJsonSchema } from '@/schemas/post-control'
+import { postControlDeleteForwardDataService, postControlForwardGetService, postControlForwardManualLinkingService, postControlForwardSettingSetService } from '@/services/post-control/control-forward'
 
 const router = new Hono<{ Variables: UserJwtVariables }>()
 
@@ -55,6 +55,26 @@ router.delete(
   }
 )
 
+router.delete(
+  '/import-data/all/post',
+  async (c) => {
+    const data = await postControlDeleteImportAllPostService()
+
+    c.status(200)
+    return c.json(handleResData(0, '删除成功', data))
+  }
+)
+
+router.delete(
+  '/import-data/all/image',
+  async (c) => {
+    const data = await postControlDeleteImportAllImageService()
+
+    c.status(200)
+    return c.json(handleResData(0, '删除成功', data))
+  }
+)
+
 router.get(
   '/forward',
   async (c) => {
@@ -74,6 +94,32 @@ router.put(
 
     c.status(200)
     return c.json(handleResData(0, '设置成功', data))
+  }
+)
+
+router.delete(
+  '/forward-data/id/:id',
+  zValWEH('param', postControlDeleteForwardDataParamSchema),
+  async (c) => {
+    const { id } = c.req.valid('param')
+
+    const data = await postControlDeleteForwardDataService(id)
+
+    c.status(200)
+    return c.json(handleResData(0, '删除成功', data))
+  }
+)
+
+router.post(
+  '/forward-data/manual-linking',
+  zValWEH('json', postControlForwardManualLinkingJsonSchema),
+  async (c) => {
+    const json = c.req.valid('json')
+
+    const data = await postControlForwardManualLinkingService(json)
+
+    c.status(200)
+    return c.json(handleResData(0, '关联成功', data))
   }
 )
 

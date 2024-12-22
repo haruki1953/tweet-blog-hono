@@ -31,3 +31,15 @@ export const postControlForwardSettingSetJsonSchema = z.object({
   forwardSettingList: forwardSettingListForSetSchema
 })
 export type PostControlForwardSettingSetJsonType = z.infer<typeof postControlForwardSettingSetJsonSchema>
+
+export const postControlDeleteForwardDataParamSchema = idParamSchema
+export type PostControlDeleteForwardDataParamType = IdParamType
+
+export const postControlForwardManualLinkingJsonSchema = z.object({
+  postId: z.string(),
+  forwardConfigId: z.string(),
+  platformPostId: z.string(),
+  platformPostLink: z.string(),
+  forwardAt: z.coerce.date().optional()
+})
+export type PostControlForwardManualLinkingJsonType = z.infer<typeof postControlForwardManualLinkingJsonSchema>
