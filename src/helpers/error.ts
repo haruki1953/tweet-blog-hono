@@ -3,6 +3,7 @@ import { type StatusCode } from 'hono/utils/http-status'
 import { handleResData } from './data'
 import { HTTPException } from 'hono/http-exception'
 import { type Hono } from 'hono'
+import { useLogUtil } from '@/utils'
 
 // handle error (call in services function on catch error)
 export const handleAppError = (
@@ -17,6 +18,8 @@ export const handleAppError = (
     throw new AppError(`${message}`, statusCode)
   }
 }
+
+const logUtil = useLogUtil()
 
 // handle global error
 export const handleGlobalError: Parameters<Hono['onError']>[0] = (error, c) => {
@@ -33,13 +36,23 @@ export const handleGlobalError: Parameters<Hono['onError']>[0] = (error, c) => {
   // for example: Malformed JSON in request body
   if (error instanceof HTTPException) {
     // console.log(error) // !!! for test、
+    logUtil.info({
+      title: '发生 HTTPException 错误',
+      content: error.message
+    })
     c.status(error.status)
-    return c.json(handleResData(1, error.message))
+    // return c.json(handleResData(1, error.message))
+    return c.json(handleResData(1, 'HTTPException'))
   }
 
   // unknown error
   // throw error
   console.log(error)
+  logUtil.info({
+    title: '发生未知错误',
+    content: error.message
+  })
   c.status(500)
-  return c.json(handleResData(1, `unknown error: ${error.message}`))
+  // return c.json(handleResData(1, `unknown error: ${error.message}`))
+  return c.json(handleResData(1, 'unknown error'))
 }

@@ -35,3 +35,16 @@ export const adminProxyTestJsonSchema = z.object({
   testAddress: z.string()
 })
 export type AdminProxyTestJsonType = z.infer<typeof adminProxyTestJsonSchema>
+
+export const adminLogGetByCursorParamSchema = z.object({
+  id: z.string().optional()
+})
+export type AdminLogGetByCursorParamType = z.infer<typeof adminLogGetByCursorParamSchema>
+
+export const adminLogGetByCursorQuerySchema = z.object({
+  error: z.enum(['true', 'false']).optional(),
+  warning: z.enum(['true', 'false']).optional(),
+  success: z.enum(['true', 'false']).optional(),
+  info: z.enum(['true', 'false']).optional()
+})
+export type AdminLogGetByCursorQueryType = z.infer<typeof adminLogGetByCursorQuerySchema>

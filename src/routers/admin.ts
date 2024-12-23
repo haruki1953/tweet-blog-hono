@@ -1,5 +1,5 @@
-import { adminProxyTestJsonSchema, adminUpdateAuthJsonSchema, adminUpdateInfoJsonSchema, adminUpdateProxyJsonSchema, imageUpdateConfigJsonSchema } from '@/schemas'
-import { adminGetInfoService, adminGetTaskService, adminProxyTestService, adminUpdateAuthService, adminUpdateInfoService, adminUpdateProxyService, imageUpdateConfigService } from '@/services'
+import { adminLogGetByCursorParamSchema, adminLogGetByCursorQuerySchema, adminProxyTestJsonSchema, adminUpdateAuthJsonSchema, adminUpdateInfoJsonSchema, adminUpdateProxyJsonSchema, imageUpdateConfigJsonSchema } from '@/schemas'
+import { adminGetInfoService, adminGetTaskService, adminLogGetByCursorService, adminProxyTestService, adminUpdateAuthService, adminUpdateInfoService, adminUpdateProxyService, imageUpdateConfigService } from '@/services'
 import { useAdminSystem } from '@/systems'
 import { type UserJwtVariables } from '@/types'
 import { handleResData, zValWEH } from '@/helpers'
@@ -95,9 +95,23 @@ router.put(
 )
 
 router.get(
-  'task',
+  '/task',
   (c) => {
     const data = adminGetTaskService()
+    c.status(200)
+    return c.json(handleResData(0, '获取成功', data))
+  }
+)
+
+router.get(
+  '/log/cursor/:id?',
+  zValWEH('param', adminLogGetByCursorParamSchema),
+  zValWEH('query', adminLogGetByCursorQuerySchema),
+  async (c) => {
+    const { id } = c.req.valid('param')
+    const query = c.req.valid('query')
+
+    const data = await adminLogGetByCursorService(id, query)
     c.status(200)
     return c.json(handleResData(0, '获取成功', data))
   }

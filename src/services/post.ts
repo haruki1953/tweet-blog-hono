@@ -12,6 +12,9 @@ import { deleteImageByIdWhereNonePost } from './base'
 import { postConfig } from '@/configs'
 import { type PromiseReturnType } from '@prisma/client/extension'
 import { type PostPrisma } from '@/types'
+import { useLogUtil } from '@/utils'
+
+const logUtil = useLogUtil()
 
 const postIncludeBase = {
   images: true,
@@ -63,14 +66,18 @@ export const postSendService = async (postInfo: PostSendJsonType) => {
     if (error.code === 'P2025') {
       throw new AppError('images或parentPostId不存在', 400)
     }
-    throw new AppError('帖子发送失败')
+    logUtil.info({
+      title: '推文添加失败',
+      content: String(error)
+    })
+    throw new AppError('推文添加失败')
   })
   return post
 }
 
 export const postUpdateService = async (postInfo: PostUpdateJsonType) => {
   if (postInfo.id === postInfo.parentPostId) {
-    throw new AppError('parentPostId 不能为当前帖子 id', 400)
+    throw new AppError('parentPostId 不能为当前推文 id', 400)
   }
   const post = await prisma.post.update({
     where: { id: postInfo.id },
@@ -114,9 +121,13 @@ export const postUpdateService = async (postInfo: PostUpdateJsonType) => {
     }
   }).catch((error) => {
     if (error.code === 'P2025') {
-      throw new AppError('帖子id、images或parentPostId不存在', 400)
+      throw new AppError('推文id、images或parentPostId不存在', 400)
     }
-    throw new AppError('帖子修改失败')
+    logUtil.info({
+      title: '推文修改失败',
+      content: String(error)
+    })
+    throw new AppError('推文修改失败')
   })
   return post
 }
@@ -128,10 +139,13 @@ export const postDeleteService = async (id: PostPrisma['id'], query: PostDeleteQ
     include: { images: true }
   }).catch((error) => {
     if (error.code === 'P2025') {
-      throw new AppError('帖子不在回收站中', 400)
+      throw new AppError('推文不在回收站中', 400)
     }
-    console.log(error)
-    throw new AppError('帖子删除失败')
+    logUtil.info({
+      title: '推文删除失败',
+      content: String(error)
+    })
+    throw new AppError('推文删除失败')
   })
 
   const tryDeleteImages = async () => {
@@ -208,9 +222,15 @@ export const postGetByIdService = async (
         }
       }
     }
+  }).catch((error) => {
+    logUtil.info({
+      title: '推文获取失败',
+      content: String(error)
+    })
+    throw new AppError('推文获取失败')
   })
   if (post == null) {
-    throw new AppError('帖子不存在', 400)
+    throw new AppError('推文不存在', 400)
   }
   return post
 }
@@ -273,6 +293,12 @@ export const postGetByCursorService = async (
         }
       }
     }
+  }).catch((error) => {
+    logUtil.info({
+      title: '推文获取失败',
+      content: String(error)
+    })
+    throw new AppError('推文获取失败')
   })
   return posts
 }

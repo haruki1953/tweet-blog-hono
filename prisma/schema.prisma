@@ -71,3 +71,11 @@ model ImageImport {
   image           Image    @relation("ImageImports", fields: [imageId], references: [id], onDelete: Cascade)
   imageId         String
 }
+
+model Log {
+  id        String   @id @default(uuid())
+  title     String?
+  content   String
+  type      String
+  createdAt DateTime @default(now())
+}

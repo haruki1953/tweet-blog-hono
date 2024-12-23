@@ -1,11 +1,28 @@
+import { AppError } from '@/classes'
 import { type ProfileUpdateExternalLinksJsonType, type ProfileUpdateSocialMediasJsonType } from '@/schemas'
 import { prisma, useProfileSystem } from '@/systems'
+import { useLogUtil } from '@/utils'
 
 const profileSystem = useProfileSystem()
 
+const logUtil = useLogUtil()
+
 export const profileGetDataService = async () => {
-  const post = await prisma.post.count()
-  const image = await prisma.image.count()
+  const post = await prisma.post.count().catch((error) => {
+    logUtil.info({
+      title: '推文数量统计失败',
+      content: String(error)
+    })
+    throw new AppError('推文数量统计失败')
+  })
+  const image = await prisma.image.count().catch((error) => {
+    logUtil.info({
+      title: '图片数量统计失败',
+      content: String(error)
+    })
+    throw new AppError('图片数量统计失败')
+  })
+
   return {
     post,
     image

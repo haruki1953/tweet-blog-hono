@@ -4,9 +4,11 @@ import { prisma, useFetchSystem, useImageSystem } from '@/systems'
 import { deleteImageByIdWhereNonePost } from './base'
 import { postConfig } from '@/configs'
 import { type ImagePrisma } from '@/types'
+import { useLogUtil } from '@/utils'
 
 const imageSystem = useImageSystem()
 const fetchSystem = useFetchSystem()
+const logUtil = useLogUtil()
 
 export const imageSendService = async (
   imageFile: File | Blob
@@ -17,7 +19,13 @@ export const imageSendService = async (
     smallSize,
     largeSize,
     originalSize
-  } = await imageSystem.processImage(imageFile)
+  } = await imageSystem.processImage(imageFile).catch((error) => {
+    logUtil.info({
+      title: '图片添加失败 | 图片处理失败',
+      content: String(error)
+    })
+    throw new AppError('图片处理失败')
+  })
 
   return await prisma.image.create({
     data: {
@@ -27,15 +35,19 @@ export const imageSendService = async (
       largeSize,
       originalSize
     }
+  }).catch((error) => {
+    logUtil.info({
+      title: '图片添加失败 | 数据库记录失败',
+      content: String(error)
+    })
+    throw new AppError('数据库记录失败')
   })
 }
 
 export const imageSendByUrlService = async (
   imageUrl: string
 ) => {
-  const imageBlob = await fetchSystem.baseBlobApi(imageUrl).catch(() => {
-    throw new AppError('图片获取失败', 500)
-  })
+  const imageBlob = await fetchSystem.baseBlobApi(imageUrl)
   return await imageSendService(imageBlob)
 }
 
@@ -54,6 +66,10 @@ export const imageUpdateService = async (
     if (error.code === 'P2025') {
       throw new AppError('imageId不存在')
     }
+    logUtil.info({
+      title: '图片修改失败',
+      content: `image id: ${imageInfo.id}\n` + String(error)
+    })
     throw new AppError('图片修改失败')
   })
   return image
@@ -100,7 +116,11 @@ export const imageDeleteOriginalService = async (id: ImagePrisma['id']) => {
       originalSize: 0,
       originalPath: null
     }
-  }).catch(() => {
+  }).catch((error) => {
+    logUtil.info({
+      title: '删除原图 | 图片修改失败',
+      content: `image id: ${id}\n` + String(error)
+    })
     throw new AppError('图片修改失败')
   })
   // delete file
@@ -118,11 +138,21 @@ export const imageDeleteAllOriginalService = async () => {
       originalSize: 0,
       originalPath: null
     }
-  }).catch(() => {
+  }).catch((error) => {
+    logUtil.info({
+      title: '删除全部原图 | 数据库更新失败',
+      content: String(error)
+    })
     throw new AppError('数据库更新失败')
   })
   // del file
-  await imageSystem.deleteAllOriginalImage()
+  await imageSystem.deleteAllOriginalImage().catch((error) => {
+    logUtil.info({
+      title: '删除全部原图 | 图片删除失败',
+      content: String(error)
+    })
+    throw new AppError('图片删除失败')
+  })
   return imgOriginalDelCount.count
 }
 

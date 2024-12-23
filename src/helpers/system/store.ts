@@ -4,6 +4,8 @@ import { AppError } from '@/classes'
 import { systemDataPath } from '@/configs'
 import { confirmSaveFolderExists } from '@/utils'
 import { cloneDeep } from 'lodash'
+import path from 'path'
+import { useLogUtil } from '@/utils/log'
 
 export const defineStoreSystem = <
   StoreSchema extends ReturnType<typeof z.object>
@@ -27,14 +29,39 @@ export const defineStoreSystem = <
     }
   }
 
+  const backup = () => {
+    const timestamp = new Date().toISOString().replace(/[-:.]/g, '')
+    const dir = path.dirname(filePath)
+    const ext = path.extname(filePath)
+    const baseName = path.basename(filePath, ext)
+    const backupFileName = `fallback-${timestamp}-${baseName}${ext}`
+    const backupFilePath = path.join(dir, backupFileName)
+
+    fs.copyFileSync(filePath, backupFilePath)
+    return backupFilePath
+  }
+
+  const logUtil = useLogUtil()
+
   // load data from file
   const load = () => {
+    let hasFile = false
     let dataObj
     try {
       // 尝试从文件中读取数据
       const dataJson = fs.readFileSync(filePath, 'utf8')
+      hasFile = true
       dataObj = JSON.parse(dataJson)
     } catch (error) {
+      if (hasFile) {
+        // json 解析失败
+        const backupFilePath = backup()
+        const logContent = `解析失败 ${filePath} 。数据已重置为默认数据，旧文件另存为 ${backupFilePath} 。`
+        console.log(logContent)
+        logUtil.error({
+          content: logContent
+        })
+      }
       // 读取失败则使用默认数据
       dataObj = storeDefault()
     }
@@ -45,15 +72,25 @@ export const defineStoreSystem = <
       dataParsed = storeSchema.parse(dataObj)
     } catch (error) {
       // 数据结构不正确，尝试将当前数据与默认数据结合
-      // const dataMerged = { ...storeDefault(), ...dataObj }
-      // console.log(dataMerged)
+      // 首先应备份文件
+      const backupFilePath = backup()
       try {
         // 将旧数据与默认数据结合后，进行验证
         const dataMerged = deepMergeParse(storeDefault(), dataObj, storeSchema)
         dataParsed = storeSchema.parse(dataMerged)
+        const logContent = `修复成功 ${filePath} 的数据结构错误。数据已与默认数据合并，旧文件另存为 ${backupFilePath} 。`
+        console.log(logContent)
+        logUtil.warning({
+          content: logContent
+        })
       } catch (error) {
         // 数据结合后仍不正确，直接使用默认数据
         dataParsed = storeSchema.parse(storeDefault())
+        const logContent = `error 修复失败 ${filePath} 的数据结构错误。数据已重置为默认数据，旧文件另存为 ${backupFilePath} 。`
+        console.log(logContent)
+        logUtil.warning({
+          content: logContent
+        })
       }
     }
 

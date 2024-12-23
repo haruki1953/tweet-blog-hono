@@ -3,8 +3,12 @@ import { prisma } from '@/systems'
 import { imageSendByUrlService, imageUpdateService, postSendService, postUpdateService } from './dependencies'
 import { type ImagePrisma } from '@/types'
 import { useTaskSystem } from '@/systems/task'
+import { useLogUtil } from '@/utils'
+import { platformKeyMap } from '@/configs'
 
 const taskSystem = useTaskSystem()
+
+const logUtil = useLogUtil()
 
 // 帖子导入服务
 export const postControlImportService = async (json: PostControlImportJsonType) => {
@@ -14,20 +18,42 @@ export const postControlImportService = async (json: PostControlImportJsonType) 
     totalCount: importPosts.length
   })
   ;(async () => {
-    // 遍历，导入帖子
+    logUtil.info({
+      content: `${importPosts.length} 条推文开始导入，任务 uuid: ${importTask.uuid}`
+    })
+    // 遍历，导入帖子。已完成计数
     let completedCount = 0
     for (const post of importPosts) {
-      const postinfo = await postControlImportServicePostImportPart(post).catch(() => null)
+      await postControlImportServicePostImportPart(post).catch((error) => {
+        const content = (() => {
+          if (post.platform == null || post.platformLink == null) {
+            return String(error)
+          }
+          return `${
+            platformKeyMap[post.platform].name +
+            ' : ' +
+            post.platformLink +
+            '\n' +
+            String(error)
+          }`
+        })()
+        logUtil.warning({
+          title: '帖子导入发生错误',
+          content
+        })
+        return null
+      })
       completedCount += 1
       // 更新任务信息
       taskSystem.importTaskUpdate(importTask.uuid, {
         completedCount
       })
-      console.log(postinfo)
     }
+    logUtil.success({
+      content: `${importPosts.length} 条推文完成导入，任务 uuid: ${importTask.uuid}`
+    })
     // 任务完成，删除
     taskSystem.importTaskDelete(importTask.uuid)
-    console.log('导入完毕')
   })().catch(() => {})
   return {
     importTask,
@@ -44,7 +70,22 @@ const postControlImportServicePostImportPart = async (
   const targetImages = (await Promise.all(
     importImages.map(async (image) => {
       return await postControlImportServiceImageImportPart(image).catch((error) => {
-        console.log(error)
+        const content = (() => {
+          if (image.platform == null || image.link == null) {
+            return String(error)
+          }
+          return `${
+            platformKeyMap[image.platform].name +
+            ' : ' +
+            image.link +
+            '\n' +
+            String(error)
+          }`
+        })()
+        logUtil.warning({
+          title: '图片导入发生错误',
+          content
+        })
         return null
       })
     })
