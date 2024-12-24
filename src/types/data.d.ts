@@ -1,4 +1,5 @@
-import type { Post as PostPrisma, Image as ImagePrisma } from '@prisma/client'
+import { type LogTypeEnumValues } from '@/configs'
+import type { Post as PostPrisma, Image as ImagePrisma, Log as LogPrisma } from '@prisma/client'
 
 export type { PostPrisma, ImagePrisma }
 
@@ -28,3 +29,7 @@ export type PostGetByIdData = Post & {
 export type PostGetByCursorData = Array<Post & {
   parentPost: Post | null
 }>
+
+export interface LogData extends LogPrisma {
+  type: LogTypeEnumValues
+}

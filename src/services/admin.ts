@@ -24,6 +24,9 @@ export const adminUpdateAuthService = (
   username: string, password: string
 ) => {
   adminSystem.updateAuth(username, password)
+  logUtil.info({
+    content: '账号密码已更新'
+  })
 }
 
 export const adminGetInfoService = () => {
@@ -102,6 +105,47 @@ export const adminLogGetByCursorService = async (
       }
     },
     orderBy: { createdAt: 'desc' }
+  }).catch((error) => {
+    logUtil.info({
+      title: '日志获取失败',
+      content: String(error)
+    })
+    throw new AppError('日志获取失败')
   })
   return logs
+}
+
+// 日志清理
+export const adminLogDeleteService = async (num: number) => {
+  // 查询前 num 条记录
+  const topNumLogs = await prisma.log.findMany({
+    orderBy: {
+      createdAt: 'desc'
+    },
+    take: num
+  }).catch((error) => {
+    logUtil.info({
+      title: '日志查询失败',
+      content: String(error)
+    })
+    throw new AppError('日志查询失败')
+  })
+
+  // 删除不在前 num 条记录中的所有其他记录
+  const { count } = await prisma.log.deleteMany({
+    where: {
+      id: {
+        notIn: topNumLogs.map(i => i.id)
+      }
+    }
+  }).catch((error) => {
+    logUtil.info({
+      title: '日志删除失败',
+      content: String(error)
+    })
+    throw new AppError('日志删除失败')
+  })
+  return {
+    count
+  }
 }

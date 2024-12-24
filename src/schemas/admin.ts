@@ -48,3 +48,8 @@ export const adminLogGetByCursorQuerySchema = z.object({
   info: z.enum(['true', 'false']).optional()
 })
 export type AdminLogGetByCursorQueryType = z.infer<typeof adminLogGetByCursorQuerySchema>
+
+export const adminLogDeleteParamSchema = z.object({
+  num: z.coerce.number()
+})
+export type AdminLogDeleteParamType = z.infer<typeof adminLogDeleteParamSchema>

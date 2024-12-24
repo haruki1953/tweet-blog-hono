@@ -1,5 +1,5 @@
-import { adminLogGetByCursorParamSchema, adminLogGetByCursorQuerySchema, adminProxyTestJsonSchema, adminUpdateAuthJsonSchema, adminUpdateInfoJsonSchema, adminUpdateProxyJsonSchema, imageUpdateConfigJsonSchema } from '@/schemas'
-import { adminGetInfoService, adminGetTaskService, adminLogGetByCursorService, adminProxyTestService, adminUpdateAuthService, adminUpdateInfoService, adminUpdateProxyService, imageUpdateConfigService } from '@/services'
+import { adminLogDeleteParamSchema, adminLogGetByCursorParamSchema, adminLogGetByCursorQuerySchema, adminProxyTestJsonSchema, adminUpdateAuthJsonSchema, adminUpdateInfoJsonSchema, adminUpdateProxyJsonSchema, imageUpdateConfigJsonSchema } from '@/schemas'
+import { adminGetInfoService, adminGetTaskService, adminLogDeleteService, adminLogGetByCursorService, adminProxyTestService, adminUpdateAuthService, adminUpdateInfoService, adminUpdateProxyService, imageUpdateConfigService } from '@/services'
 import { useAdminSystem } from '@/systems'
 import { type UserJwtVariables } from '@/types'
 import { handleResData, zValWEH } from '@/helpers'
@@ -114,6 +114,18 @@ router.get(
     const data = await adminLogGetByCursorService(id, query)
     c.status(200)
     return c.json(handleResData(0, '获取成功', data))
+  }
+)
+
+router.delete(
+  '/log/keep/:num',
+  zValWEH('param', adminLogDeleteParamSchema),
+  async (c) => {
+    const { num } = c.req.valid('param')
+
+    const data = await adminLogDeleteService(num)
+    c.status(200)
+    return c.json(handleResData(0, '删除成功', data))
   }
 )
 
