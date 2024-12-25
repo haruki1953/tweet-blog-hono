@@ -6,8 +6,8 @@ export const systemDataPath = path.join(__dirname, '../../data/')
 
 const storeDefaultAdmin: AdminStore = {
   username: 'admin',
-  password: 'adminadmin',
-  jwtAdminSecretKey: 'Will randomly generate',
+  password: 'adminadmin', // 将被哈希
+  jwtAdminSecretKey: 'Will randomly generate', // 将会随机生成
   jwtAdminExpSeconds: 10 * 24 * 60 * 60, // 10 days
   loginMaxFailCount: 10,
   loginLockSeconds: 10 * 60 * 60, // 10 hours
@@ -15,7 +15,8 @@ const storeDefaultAdmin: AdminStore = {
 }
 export const systemAdminConfig = {
   storeFile: path.join(systemDataPath, 'admin.json'),
-  storeDefault: () => cloneDeep(storeDefaultAdmin)
+  storeDefault: () => cloneDeep(storeDefaultAdmin),
+  passwordSaltRounds: 10
 }
 
 export const systemPublicPath = path.join(__dirname, '../../data/public/')

@@ -2,10 +2,14 @@ import { systemAdminConfig } from '@/configs'
 import { typesAdminStoreSchema } from '@/schemas'
 import { generateRandomKey } from '@/utils'
 import { defineStoreSystem } from '@/helpers'
+import bcrypt from 'bcryptjs'
 
 const storeDefault = () => {
   return {
     ...systemAdminConfig.storeDefault(),
+    password: bcrypt.hashSync(
+      systemAdminConfig.storeDefault().password, systemAdminConfig.passwordSaltRounds
+    ),
     jwtAdminSecretKey: generateRandomKey()
   }
 }

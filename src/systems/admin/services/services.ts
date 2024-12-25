@@ -2,7 +2,10 @@ import { AppError } from '@/classes'
 import { store, save } from '../init'
 import { canAttemptLogin, recordLoginFailure, resetLoginControl } from './login-control'
 import { systemAdminConfig } from '@/configs'
-import { generateRandomKey } from '@/utils'
+import { generateRandomKey, useLogUtil } from '@/utils'
+import bcrypt from 'bcryptjs'
+
+const logUtil = useLogUtil()
 
 export const confirmAuth = (username: string, password: string) => {
   if (!canAttemptLogin()) {
@@ -10,7 +13,19 @@ export const confirmAuth = (username: string, password: string) => {
   }
   if (
     username !== store.username ||
-    password !== store.password
+    // password !== store.password
+    (() => {
+      try {
+        const isMatch = bcrypt.compareSync(password, store.password)
+        return !isMatch
+      } catch (err) {
+        logUtil.error({
+          title: '密码验证失败',
+          content: String(err)
+        })
+        throw new AppError('密码验证失败', 500)
+      }
+    })()
   ) {
     recordLoginFailure()
     throw new AppError('用户名或密码错误', 400, 1001)
@@ -19,11 +34,23 @@ export const confirmAuth = (username: string, password: string) => {
 }
 
 export const updateAuth = (username: string, password: string) => {
-  // 要重置密钥
+  // 要重置jwt
   save({
     ...store,
     username,
-    password,
+    // password,
+    password: (() => {
+      try {
+        const hash = bcrypt.hashSync(password, systemAdminConfig.passwordSaltRounds)
+        return hash
+      } catch (err) {
+        logUtil.error({
+          title: '密码哈希失败',
+          content: String(err)
+        })
+        throw new AppError('密码哈希失败', 500)
+      }
+    })(),
     jwtAdminSecretKey: generateRandomKey()
   })
 }
@@ -32,7 +59,19 @@ export const isAuthDefault = () => {
   const storeDefaultVal = systemAdminConfig.storeDefault()
   if (
     store.username === storeDefaultVal.username &&
-    store.password === storeDefaultVal.password
+    // store.password === storeDefaultVal.password
+    (() => {
+      try {
+        const isMatch = bcrypt.compareSync(storeDefaultVal.password, store.password)
+        return isMatch
+      } catch (err) {
+        logUtil.error({
+          title: '密码验证失败',
+          content: String(err)
+        })
+        throw new AppError('密码验证失败', 500)
+      }
+    })()
   ) {
     return true
   }

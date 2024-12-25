@@ -56,7 +56,7 @@ export const defineStoreSystem = <
       if (hasFile) {
         // json 解析失败
         const backupFilePath = backup()
-        const logContent = `解析失败 ${filePath} 。数据已重置为默认数据，旧文件另存为 ${backupFilePath} 。`
+        const logContent = `解析失败 ${filePath} 。数据已重置为默认数据，旧文件另存为 ${backupFilePath}`
         console.log(logContent)
         logUtil.error({
           content: logContent
@@ -78,7 +78,7 @@ export const defineStoreSystem = <
         // 将旧数据与默认数据结合后，进行验证
         const dataMerged = deepMergeParse(storeDefault(), dataObj, storeSchema)
         dataParsed = storeSchema.parse(dataMerged)
-        const logContent = `修复成功 ${filePath} 的数据结构错误。数据已与默认数据合并，旧文件另存为 ${backupFilePath} 。`
+        const logContent = `修复成功 ${filePath} 的数据结构错误。数据已与默认数据合并，旧文件另存为 ${backupFilePath}`
         console.log(logContent)
         logUtil.warning({
           content: logContent
@@ -86,7 +86,7 @@ export const defineStoreSystem = <
       } catch (error) {
         // 数据结合后仍不正确，直接使用默认数据
         dataParsed = storeSchema.parse(storeDefault())
-        const logContent = `error 修复失败 ${filePath} 的数据结构错误。数据已重置为默认数据，旧文件另存为 ${backupFilePath} 。`
+        const logContent = `error 修复失败 ${filePath} 的数据结构错误。数据已重置为默认数据，旧文件另存为 ${backupFilePath}`
         console.log(logContent)
         logUtil.warning({
           content: logContent

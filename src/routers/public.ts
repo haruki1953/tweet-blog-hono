@@ -1,9 +1,10 @@
-import { adminLoginJsonSchema } from '@/schemas'
-import { adminLoginService } from '@/services'
+import { adminLoginJsonSchema, imageGetByCursorParamSchema, imageGetByCursorQuerySchema, imageGetByIdParamSchema, postGetByCursorParamSchma, postGetByCursorQuerySchma, postGetByIdParamSchema, postGetByIdQuerySchma } from '@/schemas'
+import { adminLoginService, imageGetByCursorService, imageGetByIdService, postGetByCursorService, postGetByIdService, profileGetDataService, profileGetStoreService } from '@/services'
 import { handleResData, zValWEH } from '@/helpers'
 import { Hono } from 'hono'
-import { useLogUtil } from '@/utils'
+import { maskSensitiveToken, useLogUtil } from '@/utils'
 import { AppError } from '@/classes'
+import { type PostGetByCursorData, type PostGetByIdData } from '@/types'
 
 const router = new Hono()
 
@@ -32,6 +33,8 @@ router.post(
       logUtil.warning({
         title,
         content:
+        `username: ${username}\n` +
+        `password: ${maskSensitiveToken(password)}\n` +
         `x-forwarded-for: ${xForwardedFor}\n` +
         `x-real-ip: ${xRealIp}\n` +
         `user-agent: ${userAgent}\n` +
@@ -50,6 +53,75 @@ router.post(
 
     c.status(200)
     return c.json(handleResData(0, '登陆成功', token))
+  }
+)
+
+router.get(
+  '/post/id/:id',
+  zValWEH('param', postGetByIdParamSchema),
+  zValWEH('query', postGetByIdQuerySchma),
+  async (c) => {
+    const { id } = c.req.valid('param')
+    const query = c.req.valid('query')
+
+    const data: PostGetByIdData = await postGetByIdService(id, query)
+    c.status(200)
+    return c.json(handleResData(0, '获取成功', data))
+  }
+)
+
+router.get(
+  '/post/cursor/:id?',
+  zValWEH('param', postGetByCursorParamSchma),
+  zValWEH('query', postGetByCursorQuerySchma),
+  async (c) => {
+    const { id } = c.req.valid('param')
+    const query = c.req.valid('query')
+
+    const data: PostGetByCursorData = await postGetByCursorService(id ?? '', query)
+    c.status(200)
+    return c.json(handleResData(0, '获取成功', data))
+  }
+)
+
+router.get(
+  '/image/id/:id',
+  zValWEH('param', imageGetByIdParamSchema),
+  async (c) => {
+    const { id } = c.req.valid('param')
+    const data = await imageGetByIdService(id)
+    c.status(200)
+    return c.json(handleResData(0, '获取成功', data))
+  }
+)
+
+router.get(
+  '/image/cursor/:id?',
+  zValWEH('param', imageGetByCursorParamSchema),
+  zValWEH('query', imageGetByCursorQuerySchema),
+  async (c) => {
+    const { id } = c.req.valid('param')
+    const query = c.req.valid('query')
+
+    const data = await imageGetByCursorService(id ?? '', query)
+    c.status(200)
+    return c.json(handleResData(0, '获取成功', data))
+  }
+)
+
+router.get(
+  '/profile/all',
+  async (c) => {
+    // 获取全部信息，包括profileStore信息，帖子、图片统计
+    const database = await profileGetDataService()
+    const store = await profileGetStoreService()
+
+    const data = {
+      data: database,
+      store
+    }
+    c.status(200)
+    return c.json(handleResData(0, '获取成功', data))
   }
 )
 
