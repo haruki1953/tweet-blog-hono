@@ -1,5 +1,5 @@
-import { type PostControlForwardSettingSetJsonType } from '@/schemas/post-control'
-import { useForwardSystem } from '@/systems/forward'
+import { type PostControlForwardSettingSetJsonType } from '@/schemas'
+import { useForwardSystem } from '@/systems'
 
 const forwardSystem = useForwardSystem()
 

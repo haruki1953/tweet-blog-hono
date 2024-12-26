@@ -12,6 +12,11 @@ const storeDefaultAdmin: AdminStore = {
   loginMaxFailCount: 10,
   loginLockSeconds: 10 * 60 * 60, // 10 hours
   proxyAddressHttp: ''
+  // 算了，感觉也没必要，需要的话还是手动设置吧
+  // 默认从系统代理获取，注意这是默认数据，只会在初始化时被保存
+  // 所以在 src\systems\admin\init.ts 又进行了额外的判断
+  // 如果 store.proxyAddressHttp 为 '' 则将保存为这个的 proxyAddressHttp
+  // proxyAddressHttp: process.env.HTTP_PROXY ?? ''
 }
 export const systemAdminConfig = {
   storeFile: path.join(systemDataPath, 'admin.json'),

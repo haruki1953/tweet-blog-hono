@@ -49,17 +49,28 @@ model PostImport {
 }
 
 model Image {
-  id           String        @id @default(uuid())
-  alt          String?
-  path         String
-  addedAt      DateTime      @default(now())
-  smallSize    Int           @default(0)
-  largeSize    Int           @default(0)
-  originalSize Int           @default(0)
-  originalPath String?
-  posts        Post[]        @relation("PostImages")
-  // twitterLargeImageLink String?
-  imageImports ImageImport[] @relation("ImageImports")
+  id            String         @id @default(uuid())
+  alt           String?
+  path          String
+  addedAt       DateTime       @default(now())
+  smallSize     Int            @default(0)
+  largeSize     Int            @default(0)
+  originalSize  Int            @default(0)
+  originalPath  String?
+  posts         Post[]         @relation("PostImages")
+  imageImports  ImageImport[]  @relation("ImageImports")
+  imageForwards ImageForward[] @relation("ImageForwards")
+}
+
+model ImageForward {
+  id              String   @id @default(uuid())
+  platform        String
+  platformImageId String
+  link            String
+  forwardAt       DateTime @default(now())
+  forwardConfigId String
+  image           Image    @relation("ImageForwards", fields: [imageId], references: [id], onDelete: Cascade)
+  imageId         String
 }
 
 model ImageImport {

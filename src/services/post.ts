@@ -184,11 +184,11 @@ export const postDeleteAllService = async (query: PostDeleteAllQueryType) => {
 }
 
 export const postGetByIdService = async (
-  id: PostPrisma['id'], query: PostGetByIdQueryType
+  id: PostPrisma['id'], query?: PostGetByIdQueryType
 ) => {
   let isDelWhereVal: false | undefined
   if (
-    query.keepIsDetele === undefined ||
+    query?.keepIsDetele == null ||
     // eslint-disable-next-line @typescript-eslint/quotes
     query.keepIsDetele === "false"
   ) {
@@ -206,7 +206,9 @@ export const postGetByIdService = async (
       parentPost: {
         where: { isDeleted: isDelWhereVal },
         include: {
-          ...postIncludeBase
+          ...postIncludeBase,
+          postImports: true,
+          postForwards: true
         }
       },
       replies: {

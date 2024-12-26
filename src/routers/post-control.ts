@@ -1,12 +1,30 @@
-import { } from '@/schemas'
-import { postControlDeleteImportAllImageService, postControlDeleteImportAllPostService, postControlDeleteImportDataService, postControlDeleteImportExcessService, postControlImportService } from '@/services'
+import {
+  postControlDeleteForwardDataParamSchema,
+  postControlDeleteImportDataParamSchema,
+  postControlForwardManualLinkingImageJsonSchema,
+  postControlForwardManualLinkingJsonSchema,
+  postControlForwardPostJsonSchema,
+  postControlForwardSettingSetJsonSchema,
+  postControlImportJsonSchema
+} from '@/schemas'
+import {
+  postControlDeleteImportAllImageService,
+  postControlDeleteImportAllPostService,
+  postControlDeleteImportDataService,
+  postControlDeleteImportExcessService,
+  postControlImportService,
+  postControlDeleteForwardDataService,
+  postControlForwardGetService,
+  postControlForwardManualLinkingImageService,
+  postControlForwardManualLinkingService,
+  postControlForwardSettingSetService,
+  postControlForwardPostService
+} from '@/services'
 import { useAdminSystem } from '@/systems'
 import { type UserJwtVariables } from '@/types'
 import { handleResData, zValWEH } from '@/helpers'
 import { Hono } from 'hono'
 import { jwt } from 'hono/jwt'
-import { postControlDeleteForwardDataParamSchema, postControlDeleteImportDataParamSchema, postControlForwardManualLinkingJsonSchema, postControlForwardSettingSetJsonSchema, postControlImportJsonSchema } from '@/schemas/post-control'
-import { postControlDeleteForwardDataService, postControlForwardGetService, postControlForwardManualLinkingService, postControlForwardSettingSetService } from '@/services/post-control/control-forward'
 
 const router = new Hono<{ Variables: UserJwtVariables }>()
 
@@ -120,6 +138,32 @@ router.post(
 
     c.status(200)
     return c.json(handleResData(0, '关联成功', data))
+  }
+)
+
+router.post(
+  '/forward-data/manual-linking/image',
+  zValWEH('json', postControlForwardManualLinkingImageJsonSchema),
+  async (c) => {
+    const json = c.req.valid('json')
+
+    const data = await postControlForwardManualLinkingImageService(json)
+
+    c.status(200)
+    return c.json(handleResData(0, '关联成功', data))
+  }
+)
+
+router.post(
+  '/forward-post',
+  zValWEH('json', postControlForwardPostJsonSchema),
+  async (c) => {
+    const json = c.req.valid('json')
+
+    const data = await postControlForwardPostService(json)
+
+    c.status(200)
+    return c.json(handleResData(0, '转发成功', data))
   }
 )
 

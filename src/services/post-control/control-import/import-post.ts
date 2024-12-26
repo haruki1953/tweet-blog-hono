@@ -1,4 +1,4 @@
-import { type PostControlImportJsonType } from '@/schemas/post-control'
+import { type PostControlImportJsonType } from '@/schemas'
 import { prisma } from '@/systems'
 import { imageSendByUrlService, imageUpdateService, postSendService, postUpdateService } from './dependencies'
 import { type ImagePrisma } from '@/types'
@@ -209,15 +209,33 @@ const postControlImportServiceImageImportPart = async (
   let targetImage
   if (platform != null && platformId != null) {
     // 包含platform与platformId，是从平台导入
-    // 在 imageImport 中查询，是否已经被导入
+    // 在 imageImport imageForwards 中查询，是否已经被导入或转发
     targetImage = await prisma.image.findFirst({
       where: {
-        imageImports: {
-          some: {
-            platform,
-            platformImageId: platformId
+        // imageImports: {
+        //   some: {
+        //     platform,
+        //     platformImageId: platformId
+        //   }
+        // }
+        OR: [
+          {
+            imageImports: {
+              some: {
+                platform,
+                platformImageId: platformId
+              }
+            }
+          },
+          {
+            imageForwards: {
+              some: {
+                platform,
+                platformImageId: platformId
+              }
+            }
           }
-        }
+        ]
       }
     })
     if (targetImage == null) {
@@ -241,7 +259,7 @@ const postControlImportServiceImageImportPart = async (
       }
     })
   } else {
-    // 不包含platform与platformId，是自定义导入
+    // 不包含platform与platformId，是自定义导入，则不用记录导入信息
     targetImage = await imageSendByUrlService(link)
     targetImage = await imageUpdateService({ id: targetImage.id, alt })
   }

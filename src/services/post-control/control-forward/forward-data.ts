@@ -1,7 +1,7 @@
 import { AppError } from '@/classes'
-import { type PostControlForwardManualLinkingJsonType } from '@/schemas/post-control'
-import { prisma } from '@/systems'
-import { useForwardSystem } from '@/systems/forward'
+import { type PostControlForwardManualLinkingImageJsonType, type PostControlForwardManualLinkingJsonType } from '@/schemas'
+import { prisma, useForwardSystem } from '@/systems'
+
 import { useLogUtil } from '@/utils'
 
 const forwardSystem = useForwardSystem()
@@ -24,6 +24,7 @@ export const postControlDeleteForwardDataService = async (id: string) => {
   return data
 }
 
+// 关联帖子
 export const postControlForwardManualLinkingService = async (
   json: PostControlForwardManualLinkingJsonType
 ) => {
@@ -65,4 +66,48 @@ export const postControlForwardManualLinkingService = async (
   })
 
   return postForward
+}
+
+// 关联图片
+export const postControlForwardManualLinkingImageService = async (
+  json: PostControlForwardManualLinkingImageJsonType
+) => {
+  const {
+    imageId,
+    forwardConfigId,
+    platformImageId,
+    platformImageLink,
+    forwardAt
+  } = json
+
+  const findForwardSetting = forwardSystem.forwardSettingFind(forwardConfigId)
+  if (findForwardSetting == null) {
+    throw new AppError('转发配置不存在', 400)
+  }
+
+  const imageForward = await prisma.imageForward.create({
+    data: {
+      imageId,
+      forwardConfigId,
+      platformImageId,
+      link: platformImageLink,
+      forwardAt,
+      platform: findForwardSetting.platform
+    }
+  }).catch((error) => {
+    if (error.code === 'P2025') {
+      throw new AppError('图片不存在', 400)
+    }
+    logUtil.info({
+      title: '转发记录创建失败',
+      content: `imageId: ${
+        imageId
+      }\nforwardConfigId: ${
+        forwardConfigId
+      }\n${String(error)}`
+    })
+    throw new AppError('转发记录创建失败')
+  })
+
+  return imageForward
 }

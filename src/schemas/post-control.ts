@@ -43,3 +43,18 @@ export const postControlForwardManualLinkingJsonSchema = z.object({
   forwardAt: z.coerce.date().optional()
 })
 export type PostControlForwardManualLinkingJsonType = z.infer<typeof postControlForwardManualLinkingJsonSchema>
+
+export const postControlForwardManualLinkingImageJsonSchema = z.object({
+  imageId: z.string(),
+  forwardConfigId: z.string(),
+  platformImageId: z.string(),
+  platformImageLink: z.string(),
+  forwardAt: z.coerce.date().optional()
+})
+export type PostControlForwardManualLinkingImageJsonType = z.infer<typeof postControlForwardManualLinkingImageJsonSchema>
+
+export const postControlForwardPostJsonSchema = z.object({
+  postId: z.string(),
+  forwardConfigId: z.string()
+})
+export type PostControlForwardPostJsonType = z.infer<typeof postControlForwardPostJsonSchema>
