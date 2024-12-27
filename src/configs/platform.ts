@@ -3,11 +3,19 @@
   前端：src\config\platform.ts
   后端：src\configs\platform.ts
 
-  如果添加平台，以下地方需要再次修改
-  前端：src\types\data\forward.d.ts
-  后端：src\schemas\types\forward.ts
+  【241227】实现了自动生成，不再需要修改了
+  ~~如果添加平台，以下地方需要再次修改~~
+  前端：src\types\data\forward.d.ts （241226实现了类型体操自动生成）
+  后端：src\schemas\types\forward.ts （241227实现自动生成zodSchema）
 
   如果只是修改 data 数据，只在本文件修改即可
+
+  对于推文导入（解析）的主要逻辑在前端：
+    src\views\control\views\tweet-import\services\process.ts
+  对于推文转发的主要逻辑在后端：
+    src\services\post-control\control-forward\forward-post\forward-post.ts
+  对于推文导入处理在后端的位置：
+    src\services\post-control\control-import\import-post.ts
 */
 
 import { z } from 'zod'
@@ -55,8 +63,8 @@ export const platformKeyMap = {
     key: 'T',
     name: 'Test',
     fontawesomeClass: 'fa-brands fa-font-awesome',
-    couldImport: true,
-    couldForward: true,
+    couldImport: false,
+    couldForward: false,
     forwardSettingDataSchema: forwardSettingDataSchemaT,
     forwardSettingDataDefault: forwardSettingDataDefaultT
   }

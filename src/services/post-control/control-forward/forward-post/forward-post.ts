@@ -76,13 +76,13 @@ export const postControlForwardPostService = async (json: PostControlForwardPost
     })
   })()
 
-  const dataForForwardPostPlatformd = {
+  const dataForForwardPostPlatformd: DataForForwardPost = {
     targetForwardSetting,
     targetPostData,
     targetImageList
   }
   // SwitchPlatformPart 按照平台对应字段调用不同的方法
-  const returnForForwardPostPlatform =
+  const returnForForwardPostPlatform: ReturnForForwardPost =
     await postControlForwardPostService_SwitchPlatformPart(
       dataForForwardPostPlatformd
     ).catch((error) => {
