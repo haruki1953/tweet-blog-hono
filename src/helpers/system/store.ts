@@ -25,7 +25,9 @@ export const defineStoreSystem = <
         store
       }
     } catch (error) {
-      throw new AppError(`${name} 系统初始化失败`)
+      // throw new AppError(`${name} 系统初始化失败`)
+      console.log(`${name} 系统初始化失败`)
+      throw error
     }
   }
 

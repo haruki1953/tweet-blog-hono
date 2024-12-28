@@ -47,7 +47,7 @@ export const imageSendService = async (
 export const imageSendByUrlService = async (
   imageUrl: string
 ) => {
-  const imageBlob = await fetchSystem.baseBlobApi(imageUrl)
+  const imageBlob = await fetchSystem.baseBlobApi(imageUrl) as Blob
   return await imageSendService(imageBlob)
 }
 

@@ -5,7 +5,7 @@ import { typesForwardStoreSchema } from '@/schemas'
 const storeDefault = () => {
   return systemForwardConfig.storeDefault()
 }
-
+// console.log('typesForwardStoreSchema', typesForwardStoreSchema)
 const storeSystem = defineStoreSystem({
   name: 'forward',
   filePath: systemForwardConfig.storeFile,

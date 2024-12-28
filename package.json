@@ -1,5 +1,6 @@
 {
   "name": "tweet-blog-hono",
+  "version": "0.0.1",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "lint": "eslint --ext .ts src",
@@ -15,7 +16,7 @@
     "jimp": "0.22.12",
     "lodash": "^4.17.21",
     "moment-timezone": "0.5.45",
-    "node-fetch": "^3.3.2",
+    "node-fetch": "^2.7.0",
     "prisma": "5.18.0",
     "twitter-api-v2": "^1.19.0",
     "uuid": "9.0.1",
@@ -25,6 +26,7 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/lodash": "^4.17.13",
     "@types/node": "^20.11.17",
+    "@types/node-fetch": "^2.6.12",
     "@types/uuid": "9.0.1",
     "@typescript-eslint/eslint-plugin": "^6.4.0",
     "eslint": "^8.0.1",

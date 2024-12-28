@@ -1,5 +1,6 @@
 FROM node:20.12.2-alpine3.19 AS base
 
+# 构建阶段
 FROM base AS builder
 WORKDIR /app
 
@@ -32,6 +33,7 @@ RUN pnpm prisma generate && \
 ENV http_proxy=
 ENV https_proxy=
 
+# 运行阶段
 FROM base AS runner
 WORKDIR /app
 
@@ -43,13 +45,20 @@ ENV https_proxy=http://192.168.2.110:10811/
 RUN npm install -g pnpm && \
     npm cache clean --force
 
+# 取消代理
+ENV http_proxy=
+ENV https_proxy=
+
 # 复制文件
+COPY --from=builder /app/entrypoint.sh /app/entrypoint.sh
 COPY --from=builder /app/package.json /app/package.json
 COPY --from=builder /app/node_modules /app/node_modules
 COPY --from=builder /app/dist /app/dist
 COPY --from=builder /app/prisma /app/prisma
 COPY --from=builder /app/static /app/static
-COPY --from=builder /app/data /app/data
+
+# 声明数据卷
+VOLUME ["/app/data"]
 
 # 设置端口
 ENV TWEET_BLOG_HONO_PORT=51125
