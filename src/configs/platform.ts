@@ -3,13 +3,6 @@
   前端：src\config\platform.ts
   后端：src\configs\platform.ts
 
-  【241227】实现了自动生成，不再需要修改了
-  ~~如果添加平台，以下地方需要再次修改~~
-  前端：src\types\data\forward.d.ts （241226实现了类型体操自动生成）
-  后端：src\schemas\types\forward.ts （241227实现自动生成zodSchema）
-
-  如果只是修改 data 数据，只在本文件修改即可
-
   对于推文导入（解析）的主要逻辑在前端：
     src\views\control\views\tweet-import\services\process.ts
   对于推文转发的主要逻辑在后端：
@@ -21,12 +14,14 @@
 import { z } from 'zod'
 
 // 转发配置中，各平台所对应的 data 数据结构
+// X / Twitter
 const forwardSettingDataSchemaX = z.object({
   'API Key': z.string(),
   'API Key Secret': z.string(),
   'Access Token': z.string(),
   'Access Token Secret': z.string()
 })
+// 用于测试
 const forwardSettingDataSchemaT = z.object({
   token: z.string()
 })
