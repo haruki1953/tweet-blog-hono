@@ -5,11 +5,16 @@
 - 前端2（公开） https://github.com/haruki1953/tweet-blog-public-vue3
 
 ```sh
+# 安装项目依赖
 pnpm install
 
-# prisma运行迁移 将在 /data 创建数据库
-pnpm prisma migrate dev --name init
+# 生成Prisma Client
+pnpm prisma generate
 
+# 将Prisma schema推送到数据库，创建数据库
+pnpm prisma db push
+
+# 启动开发服务器
 pnpm dev
 ```
 

@@ -7,8 +7,6 @@
     src\views\control\views\tweet-import\services\process.ts
   对于推文转发的主要逻辑在后端：
     src\services\post-control\control-forward\forward-post\forward-post.ts
-  对于推文导入处理在后端的位置：
-    src\services\post-control\control-import\import-post.ts
 */
 
 import { z } from 'zod'
@@ -21,10 +19,6 @@ const forwardSettingDataSchemaX = z.object({
   'Access Token': z.string(),
   'Access Token Secret': z.string()
 })
-// 用于测试
-const forwardSettingDataSchemaT = z.object({
-  token: z.string()
-})
 // data 数据例，前端要用
 const forwardSettingDataDefaultX: z.infer<typeof forwardSettingDataSchemaX> = {
   'API Key': '',
@@ -32,6 +26,10 @@ const forwardSettingDataDefaultX: z.infer<typeof forwardSettingDataSchemaX> = {
   'Access Token': '',
   'Access Token Secret': ''
 }
+// 用于测试
+const forwardSettingDataSchemaT = z.object({
+  token: z.string()
+})
 const forwardSettingDataDefaultT: z.infer<typeof forwardSettingDataSchemaT> = {
   token: ''
 }
@@ -46,6 +44,7 @@ export const platformKeyMap = {
   X: {
     key: 'X',
     name: 'X / Twitter',
+    // https://fontawesome.com/v6/search?o=v&ic=brands
     fontawesomeClass: 'fa-brands fa-x-twitter',
     // 是否支持导入或导出，这个会控制对应 radio 单选框
     couldImport: true,

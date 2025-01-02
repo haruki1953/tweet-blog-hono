@@ -18,7 +18,7 @@ type PostGetByIdServicePromiseReturnType = PromiseReturnType<typeof postGetByIdS
 const forwardSystem = useForwardSystem()
 const logUtil = useLogUtil()
 
-// SwitchPlatformPart 按照平台对应字段调用不同的方法
+// 按照平台对应字段，调用不同平台的转发方法
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const postControlForwardPostService_SwitchPlatformPart = async (
   data: DataForForwardPost
@@ -81,7 +81,7 @@ export const postControlForwardPostService = async (json: PostControlForwardPost
     targetPostData,
     targetImageList
   }
-  // SwitchPlatformPart 按照平台对应字段调用不同的方法
+  // 按照平台对应字段，调用不同平台的转发方法
   const returnForForwardPostPlatform: ReturnForForwardPost =
     await postControlForwardPostService_SwitchPlatformPart(
       dataForForwardPostPlatformd
@@ -99,7 +99,7 @@ export const postControlForwardPostService = async (json: PostControlForwardPost
       throw new AppError('转发失败')
     })
 
-  // 得到转发信息，关联帖子，关联图片
+  // 最后，将转发后得到的信息，关联至帖子，关联至图片
   const {
     resPostInfo,
     resImageList

@@ -86,10 +86,13 @@ const postControlImportServicePostImportPart = async (
           title: '图片导入发生错误',
           content
         })
-        return null
+        // return null
+        // 【250102】图片错误处理逻辑改变，之前是忽略错误图片，现在改为抛出错误
+        throw error
       })
     })
-  )).filter((i): i is ImagePrisma => i != null)
+  ))
+  // .filter((i): i is ImagePrisma => i != null)
 
   const {
     content,

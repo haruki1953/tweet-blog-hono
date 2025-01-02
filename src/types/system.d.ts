@@ -38,3 +38,23 @@ export type ForwardSettingPlatform<
 > = ExtractPlatform<Platform, ForwardSettingItem>
 // 测试
 // type x = ForwardSettingPlatform<'X'>
+// type x = {
+//   uuid: string;
+//   name: string;
+//   platform: "X";
+//   data: {
+//       'API Key': string;
+//       'API Key Secret': string;
+//       'Access Token': string;
+//       'Access Token Secret': string;
+//   };
+// }
+// type t = ForwardSettingPlatform<'T'>
+// type t = {
+//   uuid: string;
+//   name: string;
+//   platform: "T";
+//   data: {
+//       token: string;
+//   };
+// }

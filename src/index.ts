@@ -2,7 +2,7 @@ import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 
-import { httpPort, systemAdminConfig } from './configs'
+import { appInfo, httpPort, systemAdminConfig } from './configs'
 import { apiRouter, staticRouter } from './routers'
 import { handleGlobalError, handleResData } from './helpers'
 
@@ -24,7 +24,7 @@ app.onError(handleGlobalError)
 const defaultAdmin = systemAdminConfig.storeDefault()
 console.log(`
   ========================================
-              Tweblog 已启动
+              ${appInfo.copyright.text} 已启动
   ========================================
   
   公开访问: http://127.0.0.1:${httpPort}/
@@ -32,6 +32,9 @@ console.log(`
   管理访问: http://127.0.0.1:${httpPort}/admin/
   默认用户名: ${defaultAdmin.username}
   默认密码: ${defaultAdmin.password}
+
+  ${appInfo.officialDocs.link}
+  ${appInfo.copyright.link}
   
   ========================================
   `)
