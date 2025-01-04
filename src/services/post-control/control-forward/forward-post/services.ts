@@ -3,7 +3,7 @@ import { type PostControlForwardPostJsonType } from '@/schemas'
 import { useForwardSystem } from '@/systems'
 import { type PlatformKeyEnumValues, platformKeyMap } from '@/configs'
 import { forwardPostXtwitterService } from './post-platform'
-import { dataImageJoinLocalLargeImagePath, dataPostHandleImagesOrder, useLogUtil } from '@/utils'
+import { dataImageBestLocalImagePath, dataPostHandleImagesOrder, useLogUtil } from '@/utils'
 import {
   postControlForwardManualLinkingImageService,
   postControlForwardManualLinkingService,
@@ -71,7 +71,7 @@ export const postControlForwardPostService = async (json: PostControlForwardPost
       return {
         id: i.id,
         alt: i.alt,
-        localLargeImagePath: dataImageJoinLocalLargeImagePath(i.path)
+        localLargeImagePath: dataImageBestLocalImagePath(i)
       }
     })
   })()
