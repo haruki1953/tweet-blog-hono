@@ -1,4 +1,4 @@
-import type { AdminStore, FileStore, ForwardStore, ProfileStore } from '@/types'
+import type { AdminStore, FileStore, ForwardStore, ProfileStore, TaskStore } from '@/types'
 import { cloneDeep } from 'lodash'
 import path from 'path'
 
@@ -68,4 +68,12 @@ const storeDefaultForward: ForwardStore = {
 export const systemForwardConfig = {
   storeFile: path.join(systemDataPath, 'forward.json'),
   storeDefault: () => cloneDeep(storeDefaultForward)
+}
+
+const storeDefaultTask: TaskStore = {
+  taskImportList: []
+}
+export const systemTaskConfig = {
+  storeFile: path.join(systemDataPath, 'task.json'),
+  storeDefault: () => cloneDeep(storeDefaultTask)
 }

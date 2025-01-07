@@ -1,17 +1,27 @@
 import {
-  taskCache,
-  importTaskCreate,
-  importTaskRead,
-  importTaskUpdate,
-  importTaskDelete
+  taskStore,
+  resetTasksRunningToStopped,
+  taskComplete,
+  taskAbort,
+  taskDelete,
+  taskIsRunning,
+  taskImportCreate,
+  taskImportRead,
+  taskImportUpdate,
+  taskImportDelete
 } from './services'
 
 export const useTaskSystem = () => {
   return {
-    taskCache,
-    importTaskCreate,
-    importTaskRead,
-    importTaskUpdate,
-    importTaskDelete
+    taskStore,
+    resetTasksRunningToStopped,
+    taskComplete,
+    taskAbort,
+    taskDelete,
+    taskIsRunning,
+    taskImportCreate,
+    taskImportRead,
+    taskImportUpdate,
+    taskImportDelete
   }
 }

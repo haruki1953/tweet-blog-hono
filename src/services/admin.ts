@@ -66,13 +66,6 @@ export const adminProxyTestService = async (
   })
 }
 
-export const adminGetTaskService = () => {
-  const taskCache = taskSystem.taskCache()
-  return {
-    taskCache
-  }
-}
-
 // 日志分页查询
 export const adminLogGetByCursorService = async (
   cursorId: AdminLogGetByCursorParamType['id'], query: AdminLogGetByCursorQueryType
@@ -148,4 +141,21 @@ export const adminLogDeleteService = async (num: number) => {
   return {
     count
   }
+}
+
+export const adminGetTaskService = () => {
+  const taskStore = taskSystem.taskStore()
+  return {
+    taskStore
+  }
+}
+
+export const adminTaskAbortService = (uuid: string) => {
+  taskSystem.taskAbort(uuid)
+  return adminGetTaskService()
+}
+
+export const adminTaskDeleteService = (uuid: string) => {
+  taskSystem.taskDelete(uuid)
+  return adminGetTaskService()
 }

@@ -1,57 +1,77 @@
-import { type TaskCache } from '@/types'
+import { type TaskStore } from '@/types'
 import { v4 as uuidv4 } from 'uuid'
-import { cache } from './denpendencies'
+import { store, save } from './denpendencies'
+import { cloneDeep } from 'lodash'
+import { taskStatusMap } from '@/configs'
 
-type ImportTaskItem = TaskCache['importTaskList'][number]
+type ImportTaskItem = TaskStore['taskImportList'][number]
 
 type ImportTaskItemForCreateData = Partial<ImportTaskItem>
 type ImportTaskItemForUpdateData = Partial<ImportTaskItem>
 
-export const importTaskCreate = (data: ImportTaskItemForCreateData) => {
+// 任务开始时，创建任务记录
+export const taskImportCreate = (data: ImportTaskItemForCreateData) => {
   const {
     uuid = uuidv4(),
-    startAt = new Date().toISOString(),
+    startedAt = new Date().toISOString(),
+    updatedAt = new Date().toISOString(),
     totalCount = 1,
-    completedCount = 0
+    completedCount = 0,
+    // 默认是运行中
+    status = taskStatusMap.running.key
   } = data
 
-  const importTaskItem = {
+  const storeNew = cloneDeep(store)
+
+  const taskImportItem = {
     uuid,
-    startAt,
+    startedAt,
+    updatedAt,
     totalCount,
-    completedCount
+    completedCount,
+    status
   }
-  cache.importTaskList.push(importTaskItem)
-  return importTaskItem
+  storeNew.taskImportList.push(taskImportItem)
+
+  save(storeNew)
+  return taskImportItem
 }
 
-export const importTaskRead = () => {
-  return cache.importTaskList
+export const taskImportRead = () => {
+  return store.taskImportList
 }
 
-export const importTaskUpdate = (uuid: string, data: ImportTaskItemForUpdateData) => {
-  const findImportTaskItemIndex = cache.importTaskList.findIndex(i => i.uuid === uuid)
+export const taskImportUpdate = (uuid: string, data: ImportTaskItemForUpdateData) => {
+  const storeNew = cloneDeep(store)
+
+  const findImportTaskItemIndex = storeNew.taskImportList.findIndex(i => i.uuid === uuid)
   if (findImportTaskItemIndex === -1) {
     return null
   }
-  const findImportTaskItem = cache.importTaskList[findImportTaskItemIndex]
+  const findImportTaskItem = storeNew.taskImportList[findImportTaskItemIndex]
 
-  const importTaskItem = {
+  const taskImportItem = {
     ...findImportTaskItem,
+    updatedAt: new Date().toISOString(),
     ...data
   }
-  cache.importTaskList[findImportTaskItemIndex] = importTaskItem
+  storeNew.taskImportList[findImportTaskItemIndex] = taskImportItem
 
-  return importTaskItem
+  save(storeNew)
+  return taskImportItem
 }
 
-export const importTaskDelete = (uuid: string) => {
-  const findImportTaskItemIndex = cache.importTaskList.findIndex(i => i.uuid === uuid)
+export const taskImportDelete = (uuid: string) => {
+  const storeNew = cloneDeep(store)
+
+  const findImportTaskItemIndex = storeNew.taskImportList.findIndex(i => i.uuid === uuid)
   if (findImportTaskItemIndex === -1) {
     return null
   }
-  const findImportTaskItem = cache.importTaskList[findImportTaskItemIndex]
+  const findImportTaskItem = storeNew.taskImportList[findImportTaskItemIndex]
 
-  cache.importTaskList.splice(findImportTaskItemIndex, 1)
+  storeNew.taskImportList.splice(findImportTaskItemIndex, 1)
+
+  save(storeNew)
   return findImportTaskItem
 }

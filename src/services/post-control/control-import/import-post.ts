@@ -14,16 +14,24 @@ const logUtil = useLogUtil()
 export const postControlImportService = async (json: PostControlImportJsonType) => {
   const { importPosts } = json
   // 创建任务，用于保存导入进度
-  const importTask = taskSystem.importTaskCreate({
+  const taskImport = taskSystem.taskImportCreate({
     totalCount: importPosts.length
   })
   ;(async () => {
     logUtil.info({
-      content: `${importPosts.length} 条推文开始导入，任务 uuid: ${importTask.uuid}`
+      content: `${importPosts.length} 条推文开始导入，任务 uuid: ${taskImport.uuid}`
     })
-    // 遍历，导入帖子。已完成计数
+    // 已完成计数
     let completedCount = 0
+    // 遍历，导入帖子。
     for (const post of importPosts) {
+      if (!taskSystem.taskIsRunning(taskImport.uuid)) {
+        // 如果任务非运行状态，则导入中止
+        logUtil.info({
+          content: `推文导入中止，任务 uuid: ${taskImport.uuid}`
+        })
+        return
+      }
       await postControlImportServicePostImportPart(post).catch((error) => {
         const content = (() => {
           if (post.platform == null || post.platformLink == null) {
@@ -45,19 +53,20 @@ export const postControlImportService = async (json: PostControlImportJsonType) 
       })
       completedCount += 1
       // 更新任务信息
-      taskSystem.importTaskUpdate(importTask.uuid, {
+      taskSystem.taskImportUpdate(taskImport.uuid, {
         completedCount
       })
     }
     logUtil.success({
-      content: `${importPosts.length} 条推文完成导入，任务 uuid: ${importTask.uuid}`
+      content: `${importPosts.length} 条推文完成导入，任务 uuid: ${taskImport.uuid}`
     })
-    // 任务完成，删除
-    taskSystem.importTaskDelete(importTask.uuid)
+    // 任务完成
+    // taskSystem.taskImportDelete(taskImport.uuid)
+    taskSystem.taskComplete(taskImport.uuid)
   })().catch(() => {})
   return {
-    importTask,
-    taskCache: taskSystem.taskCache()
+    taskImport,
+    taskStore: taskSystem.taskStore()
   }
 }
 

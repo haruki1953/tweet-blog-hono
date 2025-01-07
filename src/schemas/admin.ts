@@ -53,3 +53,13 @@ export const adminLogDeleteParamSchema = z.object({
   num: z.coerce.number()
 })
 export type AdminLogDeleteParamType = z.infer<typeof adminLogDeleteParamSchema>
+
+export const adminTaskAbortParam = z.object({
+  uuid: z.string()
+})
+export type AdminTaskAbortParam = z.infer<typeof adminTaskAbortParam>
+
+export const adminTaskDeleteParam = z.object({
+  uuid: z.string()
+})
+export type AdminTaskDeleteParam = z.infer<typeof adminTaskDeleteParam>

@@ -1,5 +1,13 @@
-import { type TaskCache } from '@/types'
+import { systemTaskConfig } from '@/configs'
+import { defineStoreSystem } from '@/helpers'
+import { typesTaskStoreSchema } from '@/schemas'
 
-export const cache: TaskCache = {
-  importTaskList: []
-}
+const storeSystem = defineStoreSystem({
+  name: 'task',
+  filePath: systemTaskConfig.storeFile,
+  storeDefault: systemTaskConfig.storeDefault,
+  storeSchema: typesTaskStoreSchema
+})
+
+export const store = storeSystem.store
+export const save = storeSystem.save

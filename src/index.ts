@@ -5,6 +5,7 @@ import { cors } from 'hono/cors'
 import { appInfo, httpPort, systemAdminConfig } from './configs'
 import { apiRouter, staticRouter } from './routers'
 import { handleGlobalError, handleResData } from './helpers'
+import { startInitService } from './services'
 
 const app = new Hono()
 
@@ -20,6 +21,8 @@ app.notFound((c) => {
 
 // global error handler
 app.onError(handleGlobalError)
+
+startInitService()
 
 const defaultAdmin = systemAdminConfig.storeDefault()
 console.log(`

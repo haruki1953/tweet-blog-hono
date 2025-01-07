@@ -1,5 +1,5 @@
-import { adminLogDeleteParamSchema, adminLogGetByCursorParamSchema, adminLogGetByCursorQuerySchema, adminProxyTestJsonSchema, adminUpdateAuthJsonSchema, adminUpdateInfoJsonSchema, adminUpdateProxyJsonSchema, imageUpdateConfigJsonSchema } from '@/schemas'
-import { adminGetInfoService, adminGetTaskService, adminLogDeleteService, adminLogGetByCursorService, adminProxyTestService, adminUpdateAuthService, adminUpdateInfoService, adminUpdateProxyService, imageUpdateConfigService } from '@/services'
+import { adminLogDeleteParamSchema, adminLogGetByCursorParamSchema, adminLogGetByCursorQuerySchema, adminProxyTestJsonSchema, adminTaskAbortParam, adminUpdateAuthJsonSchema, adminUpdateInfoJsonSchema, adminUpdateProxyJsonSchema, imageUpdateConfigJsonSchema } from '@/schemas'
+import { adminGetInfoService, adminGetTaskService, adminLogDeleteService, adminLogGetByCursorService, adminProxyTestService, adminTaskAbortService, adminTaskDeleteService, adminUpdateAuthService, adminUpdateInfoService, adminUpdateProxyService, imageUpdateConfigService } from '@/services'
 import { useAdminSystem } from '@/systems'
 import { type UserJwtVariables } from '@/types'
 import { handleResData, zValWEH } from '@/helpers'
@@ -95,15 +95,6 @@ router.put(
 )
 
 router.get(
-  '/task',
-  (c) => {
-    const data = adminGetTaskService()
-    c.status(200)
-    return c.json(handleResData(0, '获取成功', data))
-  }
-)
-
-router.get(
   '/log/cursor/:id?',
   zValWEH('param', adminLogGetByCursorParamSchema),
   zValWEH('query', adminLogGetByCursorQuerySchema),
@@ -124,6 +115,37 @@ router.delete(
     const { num } = c.req.valid('param')
 
     const data = await adminLogDeleteService(num)
+    c.status(200)
+    return c.json(handleResData(0, '删除成功', data))
+  }
+)
+
+router.get(
+  '/task',
+  (c) => {
+    const data = adminGetTaskService()
+    c.status(200)
+    return c.json(handleResData(0, '获取成功', data))
+  }
+)
+
+router.put(
+  '/task/abort/uuid/:uuid',
+  zValWEH('param', adminTaskAbortParam),
+  (c) => {
+    const { uuid } = c.req.valid('param')
+    const data = adminTaskAbortService(uuid)
+    c.status(200)
+    return c.json(handleResData(0, '中止成功', data))
+  }
+)
+
+router.delete(
+  '/task/delete/uuid/:uuid',
+  zValWEH('param', adminTaskAbortParam),
+  (c) => {
+    const { uuid } = c.req.valid('param')
+    const data = adminTaskDeleteService(uuid)
     c.status(200)
     return c.json(handleResData(0, '删除成功', data))
   }
