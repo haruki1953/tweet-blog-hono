@@ -8,6 +8,7 @@ const profileSystem = useProfileSystem()
 const logUtil = useLogUtil()
 
 export const profileGetDataService = async () => {
+  // 这里没有where，回收站的帖子也会计数。会被访客调用，所以想这样节省性能
   const post = await prisma.post.count().catch((error) => {
     logUtil.info({
       title: '推文数量统计失败',

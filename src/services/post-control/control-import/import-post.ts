@@ -28,7 +28,7 @@ export const postControlImportService = async (json: PostControlImportJsonType) 
       if (!taskSystem.taskIsRunning(taskImport.uuid)) {
         // 如果任务非运行状态，则导入中止
         logUtil.info({
-          content: `推文导入中止，任务 uuid: ${taskImport.uuid}`
+          content: `${importPosts.length} 条推文导入中止，任务 uuid: ${taskImport.uuid}`
         })
         return
       }

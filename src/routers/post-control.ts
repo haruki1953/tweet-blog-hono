@@ -18,7 +18,8 @@ import {
   postControlForwardManualLinkingImageService,
   postControlForwardManualLinkingService,
   postControlForwardSettingSetService,
-  postControlForwardPostService
+  postControlForwardPostService,
+  postControlForwardSettingPostCountService
 } from '@/services'
 import { useAdminSystem } from '@/systems'
 import { type UserJwtVariables } from '@/types'
@@ -112,6 +113,15 @@ router.put(
 
     c.status(200)
     return c.json(handleResData(0, '设置成功', data))
+  }
+)
+
+router.get(
+  '/forward-setting/post-count',
+  async (c) => {
+    const data = await postControlForwardSettingPostCountService()
+    c.status(200)
+    return c.json(handleResData(0, '获取成功', data))
   }
 )
 
