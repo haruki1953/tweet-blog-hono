@@ -1,4 +1,4 @@
-import { type forwardSettingItemForSetSchema, type forwardSettingItemSchema, type typesAdminStoreSchema, type typesForwardStoreSchema, type typesProfileStoreSchema, type typesFileStoreSchema, type typesTaskStoreSchema, type taskBaseItemSchema } from '@/schemas'
+import { type forwardSettingItemForSetSchema, type forwardSettingItemSchema, type typesAdminStoreSchema, type typesForwardStoreSchema, type typesProfileStoreSchema, type typesFileStoreSchema, type typesTaskStoreSchema, type taskBaseItemSchema, type taskImportItemSchema, type taskForwardItemSchema, type taskImportPartSchema, type taskForwardPartSchema } from '@/schemas'
 import { type z } from 'zod'
 
 export type AdminStore = z.infer<typeof typesAdminStoreSchema>
@@ -25,7 +25,14 @@ export type ProfileStore = z.infer<typeof typesProfileStoreSchema>
 // }
 export type TaskStore = z.infer<typeof typesTaskStoreSchema>
 export type TaskBaseItem = z.infer<typeof taskBaseItemSchema>
+
+// 通过类型体操，设置为只有totalCount是必须的，创建任务时要用到这个类型
+export type TaskBaseItemOnlyRequiredTotalCount = Partial<Omit<TaskBaseItem, 'totalCount'>> & Pick<TaskBaseItem, 'totalCount'>
+
+export type TaskImportPart = z.infer<typeof taskImportPartSchema>
 export type TaskImportItem = z.infer<typeof taskImportItemSchema>
+export type TaskForwardPart = z.infer<typeof taskForwardPartSchema>
+export type TaskForwardItem = z.infer<typeof taskForwardItemSchema>
 
 export type ForwardStore = z.infer<typeof typesForwardStoreSchema>
 export type ForwardSettingItem = z.infer<typeof forwardSettingItemSchema>

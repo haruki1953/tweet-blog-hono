@@ -1,4 +1,4 @@
-import { useTaskSystem } from '@/systems/task'
+import { useTaskSystem } from '@/systems'
 
 const taskSystem = useTaskSystem()
 

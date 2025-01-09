@@ -8,7 +8,11 @@ import {
   taskImportCreate,
   taskImportRead,
   taskImportUpdate,
-  taskImportDelete
+  taskImportDelete,
+  taskForwardCreate,
+  taskForwardRead,
+  taskForwardUpdate,
+  taskForwardDelete
 } from './services'
 
 export const useTaskSystem = () => {
@@ -22,6 +26,10 @@ export const useTaskSystem = () => {
     taskImportCreate,
     taskImportRead,
     taskImportUpdate,
-    taskImportDelete
+    taskImportDelete,
+    taskForwardCreate,
+    taskForwardRead,
+    taskForwardUpdate,
+    taskForwardDelete
   }
 }

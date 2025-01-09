@@ -1,8 +1,8 @@
 import { type PostControlImportJsonType } from '@/schemas'
-import { prisma } from '@/systems'
+import { prisma, useTaskSystem } from '@/systems'
 import { imageSendByUrlService, imageUpdateService, postSendService, postUpdateService } from './dependencies'
 import { type ImagePrisma } from '@/types'
-import { useTaskSystem } from '@/systems/task'
+
 import { useLogUtil } from '@/utils'
 import { platformKeyMap } from '@/configs'
 

@@ -1,4 +1,4 @@
-import { platformKeyEnum } from '@/configs'
+import { forwardingOrderEnum, platformKeyEnum } from '@/configs'
 import { z } from 'zod'
 import { idParamSchema, type IdParamType } from './base'
 import { forwardSettingListForSetSchema } from './types'
@@ -58,3 +58,11 @@ export const postControlForwardPostJsonSchema = z.object({
   forwardConfigId: z.string()
 })
 export type PostControlForwardPostJsonType = z.infer<typeof postControlForwardPostJsonSchema>
+
+export const postControlForwardAutoJsonSchema = z.object({
+  forwardConfigId: z.string(),
+  forwardingOrder: z.enum(forwardingOrderEnum),
+  forwardingNumber: z.number().int().positive(),
+  forwardingIntervalSeconds: z.number().int().positive()
+})
+export type PostControlForwardAutoJsonType = z.infer<typeof postControlForwardAutoJsonSchema>

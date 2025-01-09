@@ -51,7 +51,8 @@ export const postControlForwardPostService = async (json: PostControlForwardPost
     throw new AppError('转发配置不存在', 400)
   }
   // 获取目标帖子
-  const targetPost = await postGetByIdService(postId)
+  // 【250109】添加了query，也查询在回收站中的
+  const targetPost = await postGetByIdService(postId, { keepIsDetele: 'true' })
 
   // 对数据预处理一下
   // 尝试获取父帖子在同平台的id

@@ -1,6 +1,7 @@
 import {
   postControlDeleteForwardDataParamSchema,
   postControlDeleteImportDataParamSchema,
+  postControlForwardAutoJsonSchema,
   postControlForwardManualLinkingImageJsonSchema,
   postControlForwardManualLinkingJsonSchema,
   postControlForwardPostJsonSchema,
@@ -19,7 +20,8 @@ import {
   postControlForwardManualLinkingService,
   postControlForwardSettingSetService,
   postControlForwardPostService,
-  postControlForwardSettingPostCountService
+  postControlForwardSettingPostCountService,
+  postControlForwardAutoService
 } from '@/services'
 import { useAdminSystem } from '@/systems'
 import { type UserJwtVariables } from '@/types'
@@ -171,6 +173,19 @@ router.post(
     const json = c.req.valid('json')
 
     const data = await postControlForwardPostService(json)
+
+    c.status(200)
+    return c.json(handleResData(0, '转发成功', data))
+  }
+)
+
+router.post(
+  '/forward-auto',
+  zValWEH('json', postControlForwardAutoJsonSchema),
+  async (c) => {
+    const json = c.req.valid('json')
+
+    const data = await postControlForwardAutoService(json)
 
     c.status(200)
     return c.json(handleResData(0, '转发成功', data))
