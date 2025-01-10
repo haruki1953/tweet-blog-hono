@@ -71,7 +71,8 @@ export const systemForwardConfig = {
 }
 
 const storeDefaultTask: TaskStore = {
-  taskImportList: []
+  taskImportList: [],
+  taskForwardList: []
 }
 export const systemTaskConfig = {
   storeFile: path.join(systemDataPath, 'task.json'),

@@ -73,14 +73,17 @@ export const postControlForwardAutoService = async (json: PostControlForwardAuto
         lastForwardedPostId: postId
       })
       // 延迟指定间隔，并有持续的中断判断
-      await delayWithInterrupt({
-        // 延迟持续时间
-        durationMs: forwardingIntervalSeconds * 1000, // 从秒转为毫秒
-        // 中断判断间隔时间
-        interruptCheckInterval: forwardingConfig.interruptCheckInterval,
-        // 中断判断函数
-        interruptCondition: forwardingCheckInterruptCondition
-      })
+      // 这里if一下是为了在最后一个时不用再延时
+      if (completedCount < forwardingPostIdList.length) {
+        await delayWithInterrupt({
+          // 延迟持续时间
+          durationMs: forwardingIntervalSeconds * 1000, // 从秒转为毫秒
+          // 中断判断间隔时间
+          interruptCheckInterval: forwardingConfig.interruptCheckInterval,
+          // 中断判断函数
+          interruptCondition: forwardingCheckInterruptCondition
+        })
+      }
     }
     logUtil.success({
       content: `${forwardingPostIdList.length} 条推文完成转发，任务 uuid: ${taskForward.uuid}`
