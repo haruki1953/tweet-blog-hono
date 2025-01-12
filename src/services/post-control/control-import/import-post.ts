@@ -1,7 +1,12 @@
 import { type PostControlImportJsonType } from '@/schemas'
-import { prisma, useTaskSystem } from '@/systems'
-import { imageSendByUrlService, imageUpdateService, postSendService, postUpdateService } from './dependencies'
-import { type ImagePrisma } from '@/types'
+import { prisma, useForwardSystem, useTaskSystem } from '@/systems'
+import {
+  imageSendByUrlService, imageUpdateService,
+  postSendService, postUpdateService,
+  postControlForwardManualLinkingService,
+  postControlForwardManualLinkingImageService
+} from './dependencies'
+import { type ImagePrisma, type PostPrisma } from '@/types'
 
 import { useLogUtil } from '@/utils'
 import { platformKeyMap } from '@/configs'
@@ -12,7 +17,7 @@ const logUtil = useLogUtil()
 
 // 帖子导入服务
 export const postControlImportService = async (json: PostControlImportJsonType) => {
-  const { importPosts } = json
+  const { importPosts, advancedSettings } = json
   // 创建任务，用于保存导入进度
   const taskImport = taskSystem.taskImportCreate({
     totalCount: importPosts.length
@@ -32,7 +37,7 @@ export const postControlImportService = async (json: PostControlImportJsonType) 
         })
         return
       }
-      await postControlImportServicePostImportPart(post).catch((error) => {
+      await postControlImportServicePostImportPart({ post, advancedSettings }).catch((error) => {
         const content = (() => {
           if (post.platform == null || post.platformLink == null) {
             return String(error)
@@ -71,14 +76,16 @@ export const postControlImportService = async (json: PostControlImportJsonType) 
 }
 
 // 帖子导入服务：帖子导入部分
-const postControlImportServicePostImportPart = async (
+const postControlImportServicePostImportPart = async (data: {
   post: PostControlImportJsonType['importPosts'][number]
-) => {
+  advancedSettings: PostControlImportJsonType['advancedSettings']
+}) => {
+  const { post, advancedSettings } = data
   const { importImages } = post
   // 遍历，导入图片
   const targetImages = (await Promise.all(
     importImages.map(async (image) => {
-      return await postControlImportServiceImageImportPart(image).catch((error) => {
+      return await postControlImportServiceImageImportPart({ image, advancedSettings }).catch((error) => {
         const content = (() => {
           if (image.platform == null || image.link == null) {
             return String(error)
@@ -210,13 +217,21 @@ const postControlImportServicePostImportPart = async (
       content, createdAt, isDeleted, images: targetImages.map(i => i.id)
     })
   }
+  // 尝试关联转发记录
+  await postControlImportServicePostImportPart_TryManualLinking({
+    post,
+    targetPost,
+    advancedSettings
+  })
   return targetPost
 }
 
 // 帖子导入服务：图片导入部分
-const postControlImportServiceImageImportPart = async (
+const postControlImportServiceImageImportPart = async (data: {
   image: PostControlImportJsonType['importPosts'][number]['importImages'][number]
-): Promise<ImagePrisma> => {
+  advancedSettings: PostControlImportJsonType['advancedSettings']
+}): Promise<ImagePrisma> => {
+  const { image, advancedSettings } = data
   const { platform, platformId, link, alt } = image
   let targetImage
   if (platform != null && platformId != null) {
@@ -224,12 +239,6 @@ const postControlImportServiceImageImportPart = async (
     // 在 imageImport imageForwards 中查询，是否已经被导入或转发
     targetImage = await prisma.image.findFirst({
       where: {
-        // imageImports: {
-        //   some: {
-        //     platform,
-        //     platformImageId: platformId
-        //   }
-        // }
         OR: [
           {
             imageImports: {
@@ -275,5 +284,107 @@ const postControlImportServiceImageImportPart = async (
     targetImage = await imageSendByUrlService(link)
     targetImage = await imageUpdateService({ id: targetImage.id, alt })
   }
+  // 尝试关联转发记录
+  await postControlImportServiceImageImportPart_TryManualLinking({
+    image,
+    targetImage,
+    advancedSettings
+  })
   return targetImage
+}
+
+const forwardSystem = useForwardSystem()
+
+// 帖子导入服务：尝试关联帖子转发记录
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const postControlImportServicePostImportPart_TryManualLinking = async (data: {
+  post: PostControlImportJsonType['importPosts'][number]
+  targetPost: PostPrisma
+  advancedSettings: PostControlImportJsonType['advancedSettings']
+}) => {
+  const {
+    post,
+    targetPost,
+    advancedSettings
+  } = data
+  const {
+    createdAt,
+    platform,
+    platformId,
+    platformLink
+  } = post
+
+  // 如果高级配置未开启，返回
+  if (advancedSettings?.forwardConfigId == null) {
+    return null
+  }
+  const { forwardConfigId } = advancedSettings
+
+  const findForwardSetting = forwardSystem.forwardSettingFind(forwardConfigId)
+  // 如果转发配置不存在，返回
+  if (findForwardSetting == null) {
+    return null
+  }
+  // 如果关键信息缺失，直接返回
+  if (platform == null || platformId == null || platformLink == null) {
+    return null
+  }
+  // 和转发配置中的平台字段对比，必须一致
+  if (platform !== findForwardSetting.platform) {
+    return null
+  }
+  // 关联
+  return await postControlForwardManualLinkingService({
+    forwardConfigId: findForwardSetting.uuid,
+    postId: targetPost.id,
+    platformPostId: platformId,
+    platformPostLink: platformLink,
+    forwardAt: createdAt
+  }).catch(() => null)
+}
+
+// 帖子导入服务：尝试关联图片转发记录
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const postControlImportServiceImageImportPart_TryManualLinking = async (data: {
+  image: PostControlImportJsonType['importPosts'][number]['importImages'][number]
+  targetImage: ImagePrisma
+  advancedSettings: PostControlImportJsonType['advancedSettings']
+}) => {
+  const {
+    image,
+    targetImage,
+    advancedSettings
+  } = data
+  const {
+    platform,
+    platformId,
+    link
+  } = image
+
+  // 如果高级配置未开启，返回
+  if (advancedSettings?.forwardConfigId == null) {
+    return null
+  }
+  const { forwardConfigId } = advancedSettings
+
+  const findForwardSetting = forwardSystem.forwardSettingFind(forwardConfigId)
+  // 如果转发配置不存在，返回
+  if (findForwardSetting == null) {
+    return null
+  }
+  // 如果关键信息缺失，直接返回
+  if (platform == null || platformId == null || link == null) {
+    return null
+  }
+  // 和转发配置中的平台字段对比，必须一致
+  if (platform !== findForwardSetting.platform) {
+    return null
+  }
+  // 关联
+  return await postControlForwardManualLinkingImageService({
+    forwardConfigId: findForwardSetting.uuid,
+    imageId: targetImage.id,
+    platformImageId: platformId,
+    platformImageLink: link
+  }).catch(() => null)
 }

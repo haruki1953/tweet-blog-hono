@@ -20,7 +20,10 @@ export const postControlImportJsonSchema = z.object({
     platformLink: z.string().optional(),
     platformParentId: z.string().nullable().optional(),
     isDeleted: z.boolean().optional()
-  }))
+  })),
+  advancedSettings: z.object({
+    forwardConfigId: z.string().optional()
+  }).optional()
 })
 export type PostControlImportJsonType = z.infer<typeof postControlImportJsonSchema>
 

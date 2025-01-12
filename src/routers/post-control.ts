@@ -21,7 +21,10 @@ import {
   postControlForwardSettingSetService,
   postControlForwardPostService,
   postControlForwardSettingPostCountService,
-  postControlForwardAutoService
+  postControlForwardAutoService,
+  postControlDeleteForwardNotSettingService,
+  postControlDeleteForwardAllPostService,
+  postControlDeleteForwardAllImageService
 } from '@/services'
 import { useAdminSystem } from '@/systems'
 import { type UserJwtVariables } from '@/types'
@@ -134,6 +137,37 @@ router.delete(
     const { id } = c.req.valid('param')
 
     const data = await postControlDeleteForwardDataService(id)
+
+    c.status(200)
+    return c.json(handleResData(0, '删除成功', data))
+  }
+)
+
+// 无对应转发配置的转发记录删除
+router.delete(
+  '/forward-data/not-setting',
+  async (c) => {
+    const data = await postControlDeleteForwardNotSettingService()
+
+    c.status(200)
+    return c.json(handleResData(0, '删除成功', data))
+  }
+)
+// 全部帖子转发记录删除
+router.delete(
+  '/forward-data/all/post',
+  async (c) => {
+    const data = await postControlDeleteForwardAllPostService()
+
+    c.status(200)
+    return c.json(handleResData(0, '删除成功', data))
+  }
+)
+// 全部图片转发记录删除
+router.delete(
+  '/forward-data/all/image',
+  async (c) => {
+    const data = await postControlDeleteForwardAllImageService()
 
     c.status(200)
     return c.json(handleResData(0, '删除成功', data))
