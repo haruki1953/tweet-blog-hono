@@ -2,7 +2,7 @@
 import { type PostControlForwardAutoJsonType } from '@/schemas'
 import { prisma, useForwardSystem, useTaskSystem } from '@/systems'
 import { delayWithInterrupt, useLogUtil } from '@/utils'
-// import { postControlForwardPostService } from './forward-post'
+import { postControlForwardPostService } from './forward-post'
 import { forwardingConfig } from '@/configs'
 
 const taskSystem = useTaskSystem()
@@ -59,12 +59,13 @@ export const postControlForwardAutoService = async (json: PostControlForwardAuto
         })
         return
       }
-      // 先打印来测试
-      console.log(postId)
-      // await postControlForwardPostService({
-      //   postId,
-      //   forwardConfigId
-      // }).catch(() => {})
+      // // 先打印来测试
+      // console.log(postId)
+      // 调用转发服务
+      await postControlForwardPostService({
+        postId,
+        forwardConfigId
+      }).catch(() => {})
 
       completedCount += 1
       // 更新任务信息

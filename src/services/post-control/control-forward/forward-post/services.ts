@@ -141,7 +141,10 @@ const findParentPostSamePlatformPostId = (data: {
     return undefined
   }
   // 首先尝试查找转发记录，不仅同平台 而且 forwardConfigId 相同
-  const findPostForwardSameForwardConfigId = targetPost.parentPost.postForwards.find(
+  const findPostForwardSameForwardConfigId = targetPost.parentPost.postForwards.slice().sort(
+    // 从新到旧排序，也就是说优先找的是新的
+    (a, b) => b.forwardAt.getTime() - a.forwardAt.getTime()
+  ).find(
     (i) => {
       return (
         i.platform === targetForwardSetting?.platform &&
@@ -153,7 +156,10 @@ const findParentPostSamePlatformPostId = (data: {
     return findPostForwardSameForwardConfigId.platformPostId
   }
   // 没找到，退而求其次只找同平台的，也就是说可能是被别的账号（forwardConfigId）转发的
-  const findPostForwardSamePlatform = targetPost.parentPost.postForwards.find(
+  const findPostForwardSamePlatform = targetPost.parentPost.postForwards.slice().sort(
+    // 从新到旧排序，也就是说优先找的是新的
+    (a, b) => b.forwardAt.getTime() - a.forwardAt.getTime()
+  ).find(
     (i) => {
       return i.platform === targetForwardSetting?.platform
     }
@@ -162,7 +168,10 @@ const findParentPostSamePlatformPostId = (data: {
     return findPostForwardSamePlatform.platformPostId
   }
   // 转发记录中都没找到，再在导入记录中寻找
-  const findPostImportSamePlatform = targetPost.parentPost.postImports.find(
+  const findPostImportSamePlatform = targetPost.parentPost.postImports.slice().sort(
+    // 从新到旧排序，也就是说优先找的是新的
+    (a, b) => b.importedAt.getTime() - a.importedAt.getTime()
+  ).find(
     (i) => {
       return i.platform === targetForwardSetting?.platform
     }
