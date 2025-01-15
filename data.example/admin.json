@@ -1,8 +1,0 @@
-{
-  "username": "admin",
-  "password": "adminadminadmin",
-  "jwtAdminSecretKey": "7Qk50raEXTk4da9g/O/8IIXzO699rGllxB5BPVy4h3g=",
-  "jwtAdminExpSeconds": 2592000,
-  "loginMaxFailCount": 10,
-  "loginLockSeconds": 3600
-}
