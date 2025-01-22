@@ -2,7 +2,10 @@ import type { AdminStore, FileStore, ForwardStore, ProfileStore, TaskStore } fro
 import { cloneDeep } from 'lodash'
 import path from 'path'
 
+// web版，保存在项目目录
 export const systemDataPath = path.join(__dirname, '../../data/')
+// // 桌面版，保存在项目外部，像大多数软件一样将数据保存在文档
+// export const systemDataPath = path.join(appElectron.getPath('documents'), 'Tweblog/data/')
 
 const storeDefaultAdmin: AdminStore = {
   username: 'admin',
@@ -24,7 +27,7 @@ export const systemAdminConfig = {
   passwordSaltRounds: 10
 }
 
-export const systemPublicPath = path.join(__dirname, '../../data/public/')
+export const systemPublicPath = path.join(systemDataPath, 'public/')
 
 const imageSavePath = path.join(systemPublicPath, 'image/')
 const avatarSavePath = path.join(systemPublicPath, 'avatar/')
