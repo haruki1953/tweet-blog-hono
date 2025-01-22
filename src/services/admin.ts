@@ -1,16 +1,26 @@
-import { prisma, useAdminSystem, useFetchSystem, useImageSystem } from '@/systems'
-import { generateTokenAdmin } from './base'
+import { prisma, useAdminSystem, useFetchSystem, useImageSystem, useTaskSystem } from '@/systems'
 import { type AdminLogGetByCursorParamType, type AdminLogGetByCursorQueryType, type AdminProxyTestJsonType, type AdminUpdateInfoJsonType, type AdminUpdateProxyJsonType } from '@/schemas'
 import { AppError } from '@/classes'
-import { useTaskSystem } from '@/systems'
 import { useLogUtil } from '@/utils'
 import { logConfig, logTypeMap } from '@/configs'
+import { sign } from 'hono/jwt'
 
 const adminSystem = useAdminSystem()
 const imageSystem = useImageSystem()
 const fetchSystem = useFetchSystem()
 const taskSystem = useTaskSystem()
 const logUtil = useLogUtil()
+
+export const generateTokenAdmin = async (
+  payloadStr: string
+) => {
+  const payload = {
+    payloadStr,
+    exp: Math.floor(Date.now() / 1000) + adminSystem.getJwtAdminExpSeconds()
+  }
+  const token = await sign(payload, adminSystem.getJwtAdminSecretKey())
+  return token
+}
 
 export const adminLoginService = async (
   username: string, password: string

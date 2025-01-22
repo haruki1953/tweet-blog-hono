@@ -1,21 +1,8 @@
 import { AppError } from '@/classes'
-import { prisma, useAdminSystem, useImageSystem } from '@/systems'
+import { prisma, useImageSystem } from '@/systems'
 import { type ImagePrisma } from '@/types'
-import { sign } from 'hono/jwt'
 
-const adminSystem = useAdminSystem()
 const imageSystem = useImageSystem()
-
-export const generateTokenAdmin = async (
-  payloadStr: string
-) => {
-  const payload = {
-    payloadStr,
-    exp: Math.floor(Date.now() / 1000) + adminSystem.getJwtAdminExpSeconds()
-  }
-  const token = await sign(payload, adminSystem.getJwtAdminSecretKey())
-  return token
-}
 
 export const deleteImageByIdWhereNonePost = async (id: ImagePrisma['id']) => {
   // in table, delete image

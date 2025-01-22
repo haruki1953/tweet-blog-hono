@@ -4,8 +4,6 @@ import path from 'path'
 
 // web版，保存在项目目录
 export const systemDataPath = path.join(__dirname, '../../data/')
-// // 桌面版，保存在项目外部，像大多数软件一样将数据保存在文档
-// export const systemDataPath = path.join(appElectron.getPath('documents'), 'Tweblog/data/')
 
 const storeDefaultAdmin: AdminStore = {
   username: 'admin',
@@ -15,11 +13,6 @@ const storeDefaultAdmin: AdminStore = {
   loginMaxFailCount: 10,
   loginLockSeconds: 10 * 60 * 60, // 10 hours
   proxyAddressHttp: ''
-  // 算了，感觉也没必要，需要的话还是手动设置吧
-  // 默认从系统代理获取，注意这是默认数据，只会在初始化时被保存
-  // 所以在 src\systems\admin\init.ts 又进行了额外的判断
-  // 如果 store.proxyAddressHttp 为 '' 则将保存为这个的 proxyAddressHttp
-  // proxyAddressHttp: process.env.HTTP_PROXY ?? ''
 }
 export const systemAdminConfig = {
   storeFile: path.join(systemDataPath, 'admin.json'),
@@ -56,7 +49,7 @@ const storeDefaultProfile: ProfileStore = {
   name: '',
   bio: '',
   socialMedias: [],
-  aboutMarkdown: '# 一级标题\n\n## 二级标题\n\n### 三级标题\n\n这是一个段落，包含了一些**粗体**和*斜体*文本。\n\n这是一个带有链接的段落。\n\n- 这是一个无序列表项\n- 这是另一个无序列表项\n  - 这是一个嵌套的无序列表项\n\n1. 这是一个有序列表项\n2. 这是另一个有序列表项\n\n> 这是一个引用块，用于引用文本。\n\n这是一个内嵌代码块：`console.log(\'Hello, world!\');`\n\n```\n这是一个多行代码块：\nfunction greet() {\n console.log(\'Hello, world!\');\n}\ngreet();\n```\n\n---\n\n这是一个分割线（水平线）。\n\n这是一个包含删除线的文本：~~这是一段已删除的文本。~~\n\n| 表头1 | 表头2 |\n|-------|-------|\n| 单元格1 | 单元格2 |\n| 单元格3 | 单元格4 |\n',
+  aboutMarkdown: '# 什么是 Tweblog\n\n**Tweblog 是一个社交媒体博客化工具**，目的是为了方便同时运营多个社交媒体，也可以用它来充当自己的博客。\n\n**官网/文档：** [tweblog.com](https://tweblog.com)\n',
   externalLinks: [],
   externalIcons: []
 }
