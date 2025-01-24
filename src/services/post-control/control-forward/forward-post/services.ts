@@ -10,8 +10,7 @@ import {
   postGetByIdService
 } from './dependencies'
 import { type DataForForwardPostPlatform, type DataForForwardPost, type ReturnForForwardPost } from './type'
-import { type PromiseReturnType } from '@prisma/client/extension'
-import { type ForwardSettingItem } from '@/types'
+import { type PromiseReturnType, type ForwardSettingItem } from '@/types'
 
 type PostGetByIdServicePromiseReturnType = PromiseReturnType<typeof postGetByIdService>
 

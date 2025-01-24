@@ -10,8 +10,8 @@ import {
 import { prisma } from '@/systems'
 import { deleteImageByIdWhereNonePost } from './base'
 import { postConfig } from '@/configs'
-import { type PromiseReturnType } from '@prisma/client/extension'
-import { type PostPrisma } from '@/types'
+import { type PromiseReturnType, type PostPrisma } from '@/types'
+
 import { useLogUtil } from '@/utils'
 
 const logUtil = useLogUtil()

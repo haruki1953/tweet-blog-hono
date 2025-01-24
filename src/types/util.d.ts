@@ -9,3 +9,6 @@ export type UnionToTuple<U, T extends any[] = []> =
   [U] extends [never]
     ? T
     : UnionToTuple<Exclude<U, LastInUnion<U>>, [LastInUnion<U>, ...T]>
+
+// 获取异步函数的返回值类型
+export type PromiseReturnType<T extends (...args: any) => any> = Awaited<ReturnType<T>>

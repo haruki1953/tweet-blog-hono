@@ -17,14 +17,13 @@ RUN npm install -g pnpm && \
 
 # 复制文件 tsconfig.json 和 entrypoint.sh
 COPY tsconfig.json entrypoint.sh ./
-# 复制目录 src、prisma 和 static
+# 复制目录 src、drizzle 和 static
 COPY ./src ./src
-COPY ./prisma ./prisma
+COPY ./drizzle ./drizzle
 COPY ./static ./static
 
 # 生成PrismaClient、编译、修剪依赖、清理缓存
-RUN pnpm prisma generate && \
-    pnpm build && \
+RUN pnpm build && \
     pnpm prune --prod && \
     pnpm store prune && \
     npm cache clean --force
@@ -54,7 +53,7 @@ COPY --from=builder /app/entrypoint.sh /app/entrypoint.sh
 COPY --from=builder /app/package.json /app/package.json
 COPY --from=builder /app/node_modules /app/node_modules
 COPY --from=builder /app/dist /app/dist
-COPY --from=builder /app/prisma /app/prisma
+COPY --from=builder /app/drizzle /app/drizzle
 COPY --from=builder /app/static /app/static
 
 # 声明数据卷

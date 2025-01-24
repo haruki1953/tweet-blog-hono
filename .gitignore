@@ -27,6 +27,7 @@ lerna-debug.log*
 # misc
 .DS_Store
 /data
+/data-250124
 /dist
 # /static
 /static
