@@ -10,7 +10,7 @@ import {
 import { prisma } from '@/systems'
 import { deleteImageByIdWhereNonePost } from './base'
 import { postConfig } from '@/configs'
-import { type PromiseReturnType, type PostPrisma } from '@/types'
+import { type PromiseReturnType, type PostInferSelect } from '@/types'
 
 import { useLogUtil } from '@/utils'
 
@@ -132,7 +132,7 @@ export const postUpdateService = async (postInfo: PostUpdateJsonType) => {
   return post
 }
 
-export const postDeleteService = async (id: PostPrisma['id'], query: PostDeleteQueryType) => {
+export const postDeleteService = async (id: PostInferSelect['id'], query: PostDeleteQueryType) => {
   // can direct delete post, prisma can auto manage relation (images)
   const post = await prisma.post.delete({
     where: { id, isDeleted: true },
@@ -184,7 +184,7 @@ export const postDeleteAllService = async (query: PostDeleteAllQueryType) => {
 }
 
 export const postGetByIdService = async (
-  id: PostPrisma['id'], query?: PostGetByIdQueryType
+  id: PostInferSelect['id'], query?: PostGetByIdQueryType
 ) => {
   let isDelWhereVal: false | undefined
   if (
@@ -238,7 +238,7 @@ export const postGetByIdService = async (
 }
 
 export const postGetByCursorService = async (
-  cursorId: PostPrisma['id'], query: PostGetByCursorQueryType
+  cursorId: PostInferSelect['id'], query: PostGetByCursorQueryType
 ) => {
   // when cursorId is 0, it's first,
   // skip must be undefined, and cursor is undefined

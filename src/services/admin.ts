@@ -1,9 +1,10 @@
-import { prisma, useAdminSystem, useFetchSystem, useImageSystem, useTaskSystem } from '@/systems'
+import { useAdminSystem, useFetchSystem, useImageSystem, useTaskSystem } from '@/systems'
 import { type AdminLogGetByCursorParamType, type AdminLogGetByCursorQueryType, type AdminProxyTestJsonType, type AdminUpdateInfoJsonType, type AdminUpdateProxyJsonType } from '@/schemas'
 import { AppError } from '@/classes'
 import { useLogUtil } from '@/utils'
-import { logConfig, logTypeMap } from '@/configs'
+import { logConfig } from '@/configs'
 import { sign } from 'hono/jwt'
+import { drizzleDb, drizzleOrm, drizzleSchema } from '@/db'
 
 const adminSystem = useAdminSystem()
 const imageSystem = useImageSystem()
@@ -76,38 +77,84 @@ export const adminProxyTestService = async (
   })
 }
 
+// 对日志查询的排序，要复用
+// createdAt降序 id升序
+const dbLogsOrderBy = [
+  drizzleOrm.desc(drizzleSchema.logs.createdAt),
+  drizzleOrm.asc(drizzleSchema.logs.id)
+]
+
+// src\services\admin.ts
 // 日志分页查询
 export const adminLogGetByCursorService = async (
   cursorId: AdminLogGetByCursorParamType['id'], query: AdminLogGetByCursorQueryType
 ) => {
-  const skip = cursorId == null ? undefined : 1
-  const cursor = cursorId == null ? undefined : { id: cursorId }
-  const typeQueryList = (() => {
-    const typeList = []
-    if (query.error !== 'false') {
-      typeList.push(logTypeMap.error.key)
+  // 在正式查询之前，首先要查询游标对应的log
+  const cursorLog = await (async () => {
+    if (cursorId == null) {
+      return undefined
     }
-    if (query.warning !== 'false') {
-      typeList.push(logTypeMap.warning.key)
+    const logsQuery = await drizzleDb.query.logs.findFirst({
+      where: drizzleOrm.eq(drizzleSchema.logs.id, cursorId)
+    })
+    if (logsQuery == null) {
+      throw new AppError('日志获取失败 | 游标无效')
     }
-    if (query.success !== 'false') {
-      typeList.push(logTypeMap.success.key)
-    }
-    if (query.info !== 'false') {
-      typeList.push(logTypeMap.info.key)
-    }
-    return typeList
+    return logsQuery
   })()
-  const logs = await prisma.log.findMany({
-    take: logConfig.logCursorTakeNum,
-    skip,
-    cursor,
-    where: {
-      type: {
-        in: typeQueryList
-      }
-    },
-    orderBy: { createdAt: 'desc' }
+
+  // where使其从游标开始查询
+  const selectWhere = (() => {
+    if (cursorLog == null) {
+      return undefined
+    }
+    return drizzleOrm.or(
+      // 查询createdAt比游标所指的小的，因为是createdAt降序排序
+      drizzleOrm.lt(drizzleSchema.logs.createdAt, cursorLog.createdAt),
+      // 需要考虑到createdAt相同的情况，所以需要借助id来确认createdAt相同时的顺序
+      // 借助id升序降序随便，但要与orderBy相同
+      drizzleOrm.and(
+        drizzleOrm.eq(drizzleSchema.logs.createdAt, cursorLog.createdAt),
+        drizzleOrm.gt(drizzleSchema.logs.id, cursorLog.id)
+      )
+    )
+  })()
+
+  // orderBy
+  const selectOrderBy = dbLogsOrderBy
+
+  // selectLimit 分页个数
+  const selectLimit = logConfig.logCursorTakeNum
+
+  // selectOffset 分页查询时，需要跳过一个
+  const selectOffset = (() => {
+    if (cursorLog == null) {
+      return 0
+    }
+    return 1
+  })()
+
+  // select方式的查询，功能更多
+  // const logsList = await drizzleDb
+  //   .select()
+  //   .from(drizzleSchema.logs)
+  //   .where(selectWhere)
+  //   .orderBy(...selectOrderBy)
+  //   .limit(selectLimit)
+  //   .offset(selectOffset)
+  //   .catch((error) => {
+  //     logUtil.info({
+  //       title: '日志获取失败',
+  //       content: String(error)
+  //     })
+  //     throw new AppError('日志获取失败')
+  //   })
+  // query方式的查询，关系查询方便
+  const logsList = await drizzleDb.query.logs.findMany({
+    where: selectWhere,
+    orderBy: selectOrderBy,
+    limit: selectLimit,
+    offset: selectOffset
   }).catch((error) => {
     logUtil.info({
       title: '日志获取失败',
@@ -115,18 +162,22 @@ export const adminLogGetByCursorService = async (
     })
     throw new AppError('日志获取失败')
   })
-  return logs
+  return logsList
 }
 
+// src\services\admin.ts
 // 日志清理
 export const adminLogDeleteService = async (num: number) => {
   // 查询前 num 条记录
-  const topNumLogs = await prisma.log.findMany({
-    orderBy: {
-      createdAt: 'desc'
-    },
-    take: num
-  }).catch((error) => {
+  const topNumLogs = await (async () => {
+    const selectOrderBy = dbLogsOrderBy
+    const logsSelect = await drizzleDb
+      .select()
+      .from(drizzleSchema.logs)
+      .orderBy(...selectOrderBy)
+      .limit(num)
+    return logsSelect
+  })().catch((error) => {
     logUtil.info({
       title: '日志查询失败',
       content: String(error)
@@ -135,21 +186,25 @@ export const adminLogDeleteService = async (num: number) => {
   })
 
   // 删除不在前 num 条记录中的所有其他记录
-  const { count } = await prisma.log.deleteMany({
-    where: {
-      id: {
-        notIn: topNumLogs.map(i => i.id)
-      }
-    }
-  }).catch((error) => {
+  const deletedLogs = await (async () => {
+    const deleteWhere = drizzleOrm.notInArray(
+      drizzleSchema.logs.id, topNumLogs.map(i => i.id)
+    )
+    const logsDelete = await drizzleDb
+      .delete(drizzleSchema.logs)
+      .where(deleteWhere)
+      .returning()
+    return logsDelete
+  })().catch((error) => {
     logUtil.info({
       title: '日志删除失败',
       content: String(error)
     })
     throw new AppError('日志删除失败')
   })
+
   return {
-    count
+    count: deletedLogs.length
   }
 }
 

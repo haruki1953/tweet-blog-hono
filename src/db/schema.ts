@@ -1,7 +1,7 @@
 import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core'
 import { relations, sql } from 'drizzle-orm'
 import { v4 as uuidv4 } from 'uuid'
-import { platformKeyEnum } from '@/configs'
+import { logTypeEnum, platformKeyEnum } from '@/configs'
 
 // 帖子表
 export const posts = sqliteTable('posts', {
@@ -93,6 +93,17 @@ export const imageImports = sqliteTable('image_imports', {
   link: text('link').notNull(),
   importedAt: integer('imported_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
   imageId: text('image_id').notNull().references(() => images.id, { onDelete: 'cascade' })
+})
+
+// 日志表
+export const logs = sqliteTable('logs', {
+  id: text('id').primaryKey().$default(() => uuidv4()),
+  title: text('title'),
+  content: text('content').notNull(),
+  type: text('type', {
+    enum: logTypeEnum
+  }).notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`)
 })
 
 // 关系定义

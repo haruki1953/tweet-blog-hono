@@ -6,7 +6,7 @@ import {
   postControlForwardManualLinkingService,
   postControlForwardManualLinkingImageService
 } from './dependencies'
-import { type ImagePrisma, type PostPrisma } from '@/types'
+import { type ImageInferSelect, type PostInferSelect } from '@/types'
 
 import { useLogUtil } from '@/utils'
 import { platformKeyMap } from '@/configs'
@@ -108,7 +108,7 @@ const postControlImportServicePostImportPart = async (data: {
       })
     })
   ))
-  // .filter((i): i is ImagePrisma => i != null)
+  // .filter((i): i is ImageInferSelect => i != null)
 
   const {
     content,
@@ -230,7 +230,7 @@ const postControlImportServicePostImportPart = async (data: {
 const postControlImportServiceImageImportPart = async (data: {
   image: PostControlImportJsonType['importPosts'][number]['importImages'][number]
   advancedSettings: PostControlImportJsonType['advancedSettings']
-}): Promise<ImagePrisma> => {
+}): Promise<ImageInferSelect> => {
   const { image, advancedSettings } = data
   const { platform, platformId, link, alt } = image
   let targetImage
@@ -299,7 +299,7 @@ const forwardSystem = useForwardSystem()
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const postControlImportServicePostImportPart_TryManualLinking = async (data: {
   post: PostControlImportJsonType['importPosts'][number]
-  targetPost: PostPrisma
+  targetPost: PostInferSelect
   advancedSettings: PostControlImportJsonType['advancedSettings']
 }) => {
   const {
@@ -347,7 +347,7 @@ const postControlImportServicePostImportPart_TryManualLinking = async (data: {
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const postControlImportServiceImageImportPart_TryManualLinking = async (data: {
   image: PostControlImportJsonType['importPosts'][number]['importImages'][number]
-  targetImage: ImagePrisma
+  targetImage: ImageInferSelect
   advancedSettings: PostControlImportJsonType['advancedSettings']
 }) => {
   const {

@@ -1,20 +1,44 @@
 import { AppError } from '@/classes'
-import { prisma, useImageSystem } from '@/systems'
-import { type ImagePrisma } from '@/types'
+import { drizzleDb, drizzleOrm, drizzleSchema } from '@/db'
+import { useImageSystem } from '@/systems'
+import { type ImageInferSelect } from '@/types'
 
 const imageSystem = useImageSystem()
 
-export const deleteImageByIdWhereNonePost = async (id: ImagePrisma['id']) => {
-  // in table, delete image
-  const img = await prisma.image.delete({
-    where: { id, posts: { none: {} } }
-  }).catch((error) => {
-    if (error.code === 'P2025') {
-      throw new AppError('图片被引用中，或图片id不存在', 400)
-    }
-    throw new AppError('图片删除失败')
+export const baseFindImageById = async (id: ImageInferSelect['id']) => {
+  return await drizzleDb.query.images.findFirst({
+    where: drizzleOrm.eq(drizzleSchema.images.id, id)
   })
-  // in file, delete image
+}
+
+export const baseFindImageByIdWithToPosts = async (id: ImageInferSelect['id']) => {
+  return await drizzleDb.query.images.findFirst({
+    where: drizzleOrm.eq(drizzleSchema.images.id, id),
+    with: {
+      postsToImages: true
+    }
+  })
+}
+
+// src\services\base.ts
+// 尝试删除图片
+export const deleteImageByIdWhereNonePost = async (id: ImageInferSelect['id']) => {
+  // 查找图片
+  const img = await baseFindImageByIdWithToPosts(id)
+  if (img == null) {
+    throw new AppError('图片不存在', 400)
+  }
+
+  // 确认其未被使用
+  if (img.postsToImages.length !== 0) {
+    throw new AppError('图片使用中', 400)
+  }
+
+  // 在表中删除
+  await drizzleDb.delete(drizzleSchema.images)
+    .where(drizzleOrm.eq(drizzleSchema.images.id, img.id))
+
+  // 在文件中删除
   imageSystem.deleteImage(img.path, img.originalPath)
   return img
 }
