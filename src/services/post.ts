@@ -7,140 +7,228 @@ import {
   type PostDeleteAllQueryType,
   type PostDeleteQueryType
 } from '@/schemas'
-import { prisma } from '@/systems'
-import { deleteImageByIdWhereNonePost } from './base'
+import { baseFindImageById, baseFindPostById, deleteImageByIdWhereNonePost } from './base'
 import { postConfig } from '@/configs'
-import { type PromiseReturnType, type PostInferSelect } from '@/types'
+import { type PostInferSelect } from '@/types'
 
-import { useLogUtil } from '@/utils'
+import { dataDQWPostBaseHandle, dataDQWPostSendHandle, useLogUtil } from '@/utils'
+import { drizzleDb, drizzleOrm, drizzleSchema } from '@/db'
 
 const logUtil = useLogUtil()
 
-const postIncludeBase = {
-  images: true,
-  _count: {
-    select: {
-      replies: {
-        where: { isDeleted: false }
-      }
+export const dbQueryWithOnPost = {
+  postsToImages: {
+    with: {
+      image: true
+    }
+  },
+  replies: {
+    where: drizzleOrm.eq(drizzleSchema.posts.isDeleted, false),
+    columns: {
+      id: true
     }
   }
-}
+} as const
 
+// src\services\post.ts
+// 帖子创建
 export const postSendService = async (postInfo: PostSendJsonType) => {
-  const post = await prisma.post.create({
-    data: {
-      content: postInfo.content ?? '',
-      createdAt: postInfo.createdAt,
-      imagesOrder: (
-        postInfo.images === undefined
-          ? undefined
-          : (
-              JSON.stringify(postInfo.images)
-            )
-      ),
-      images: (
-        postInfo.images === undefined
-          ? undefined
-          : (
-              {
-                connect: postInfo.images.map((id) => {
-                  return { id }
-                })
-              }
-            )
-      ),
-      parentPost: (
-        postInfo.parentPostId == null
-          ? undefined
-          : ({ connect: { id: postInfo.parentPostId } })
-      ),
-      // twitterId: postInfo.twitterId,
-      // twitterLink: postInfo.twitterLink,
-      isDeleted: postInfo.isDeleted
-    },
-    include: {
-      ...postIncludeBase
+  // 确认图片存在
+  if (postInfo.images != null) {
+    await Promise.all(postInfo.images.map(async (imgId) => {
+      const imgData = await baseFindImageById(imgId)
+      if (imgData == null) {
+        throw new AppError('图片不存在', 400)
+      }
+    }))
+  }
+  // 确认父帖存在
+  if (postInfo.parentPostId != null) {
+    const postData = await baseFindPostById(postInfo.parentPostId)
+    if (postData == null) {
+      throw new AppError('父帖不存在', 400)
     }
+  }
+
+  const newDate = new Date()
+
+  // 事务
+  const post = await drizzleDb.transaction(async (drizzleTx) => {
+    // 添加帖子
+    const insertedPosts = await drizzleTx.insert(drizzleSchema.posts)
+      .values({
+        // 时间之类最好手动指定，因为默认值只以秒为精确度
+        createdAt: postInfo.createdAt ?? newDate,
+        addedAt: newDate,
+        updatedAt: newDate,
+        content: postInfo.content ?? '',
+        imagesOrder: (() => {
+          if (postInfo.images == null) {
+            return undefined
+          }
+          return JSON.stringify(postInfo.images)
+        })(),
+        parentPostId: postInfo.parentPostId,
+        isDeleted: postInfo.isDeleted
+      })
+      .returning()
+
+    if (insertedPosts.length === 0) {
+      throw new AppError('帖子添加失败', 500)
+    }
+    const addedPost = insertedPosts[0]
+
+    // 关联图片
+    await (async () => {
+      if (postInfo.images == null) {
+        return
+      }
+      await drizzleTx.insert(drizzleSchema.postsToImages)
+        .values((() => {
+          return postInfo.images.map((imageId) => {
+            return {
+              postId: addedPost.id,
+              imageId
+            }
+          })
+        })())
+    })()
+
+    // 最后再次查询帖子数据
+    const post = await drizzleDb.query.posts.findFirst({
+      where: drizzleOrm.eq(drizzleSchema.posts.id, addedPost.id),
+      with: dbQueryWithOnPost
+    })
+    if (post == null) {
+      throw new AppError('帖子添加失败', 500)
+    }
+    return post
   }).catch((error) => {
-    if (error.code === 'P2025') {
-      throw new AppError('images或parentPostId不存在', 400)
-    }
     logUtil.info({
       title: '推文添加失败',
       content: String(error)
     })
     throw new AppError('推文添加失败')
   })
-  return post
+
+  return dataDQWPostSendHandle(post)
 }
 
+// src\services\post.ts
+// 帖子更新
 export const postUpdateService = async (postInfo: PostUpdateJsonType) => {
+  // 父帖不能为当前推文
   if (postInfo.id === postInfo.parentPostId) {
-    throw new AppError('parentPostId 不能为当前推文 id', 400)
+    throw new AppError('父帖不能为当前推文', 400)
   }
-  const post = await prisma.post.update({
-    where: { id: postInfo.id },
-    data: {
-      content: postInfo.content,
-      createdAt: postInfo.createdAt,
-      imagesOrder: (
-        postInfo.images === undefined
-          ? undefined
-          : (
-              JSON.stringify(postInfo.images)
-            )
-      ),
-      images: (
-        postInfo.images === undefined
-          ? undefined
-          : (
-              {
-                set: postInfo.images.map((id) => {
-                  return { id }
-                })
-              }
-            )
-      ),
-      parentPost: (
-        postInfo.parentPostId === undefined
-          ? undefined
-          : (
-              postInfo.parentPostId === null
-                ? ({ disconnect: true })
-                : ({ connect: { id: postInfo.parentPostId } })
-            )
-      ),
-      // twitterId: postInfo.twitterId,
-      // twitterLink: postInfo.twitterLink,
-      isDeleted: postInfo.isDeleted
-    },
-    include: {
-      parentPost: true,
-      images: true
+  // 确认帖子存在
+  const targetPost = baseFindPostById(postInfo.id)
+  if (targetPost == null) {
+    throw new AppError('帖子不存在', 400)
+  }
+  // 确认图片存在
+  if (postInfo.images != null) {
+    await Promise.all(postInfo.images.map(async (imgId) => {
+      const imgData = await baseFindImageById(imgId)
+      if (imgData == null) {
+        throw new AppError('图片不存在', 400)
+      }
+    }))
+  }
+  // 确认父帖存在
+  if (postInfo.parentPostId != null) {
+    const postData = await baseFindPostById(postInfo.parentPostId)
+    if (postData == null) {
+      throw new AppError('父帖不存在', 400)
     }
+  }
+
+  const newDate = new Date()
+
+  // 事务
+  const post = await drizzleDb.transaction(async (drizzleTx) => {
+    // 更新数据
+    await drizzleTx.update(drizzleSchema.posts)
+      .set({
+        // 时间之类最好手动指定，因为默认值只以秒为精确度
+        createdAt: postInfo.createdAt,
+        updatedAt: newDate,
+        content: postInfo.content,
+        imagesOrder: (() => {
+          if (postInfo.images == null) {
+            return undefined
+          }
+          return JSON.stringify(postInfo.images)
+        })(),
+        parentPostId: postInfo.parentPostId,
+        isDeleted: postInfo.isDeleted
+      })
+      .where(drizzleOrm.eq(drizzleSchema.posts.id, postInfo.id))
+      .returning()
+
+    // 更新图片
+    await (async () => {
+      if (postInfo.images == null) {
+        return
+      }
+      // 首先清空本帖子与图片的关联
+      await drizzleTx.delete(drizzleSchema.postsToImages)
+        .where(drizzleOrm.eq(drizzleSchema.postsToImages.postId, postInfo.id))
+      // 然后进行关联
+      await drizzleTx.insert(drizzleSchema.postsToImages)
+        .values((() => {
+          return postInfo.images.map((imageId) => {
+            return {
+              postId: postInfo.id,
+              imageId
+            }
+          })
+        })())
+    })()
+
+    // 最后再次查询帖子数据
+    const post = await drizzleDb.query.posts.findFirst({
+      where: drizzleOrm.eq(drizzleSchema.posts.id, postInfo.id),
+      with: dbQueryWithOnPost
+    })
+    if (post == null) {
+      throw new AppError('帖子更新失败', 500)
+    }
+    return post
   }).catch((error) => {
-    if (error.code === 'P2025') {
-      throw new AppError('推文id、images或parentPostId不存在', 400)
-    }
     logUtil.info({
       title: '推文修改失败',
       content: String(error)
     })
     throw new AppError('推文修改失败')
   })
-  return post
+
+  // 返回响应 类型和帖子发送一致
+  return dataDQWPostSendHandle(post)
 }
 
+// src\services\post.ts
+// 帖子删除
 export const postDeleteService = async (id: PostInferSelect['id'], query: PostDeleteQueryType) => {
-  // can direct delete post, prisma can auto manage relation (images)
-  const post = await prisma.post.delete({
-    where: { id, isDeleted: true },
-    include: { images: true }
+  // 查找帖子并包含需要的数据
+  const targetPost = await drizzleDb.query.posts.findFirst({
+    where: drizzleOrm.eq(drizzleSchema.posts.id, id),
+    with: dbQueryWithOnPost
+  })
+  if (targetPost == null) {
+    throw new AppError('帖子不存在', 400)
+  }
+  const post = dataDQWPostBaseHandle(targetPost)
+
+  // 事务
+  await drizzleDb.transaction(async (drizzleTx) => {
+    // 解除图片关联
+    await drizzleTx.delete(drizzleSchema.postsToImages)
+      .where(drizzleOrm.eq(drizzleSchema.postsToImages.postId, id))
+    // 删除帖子
+    await drizzleTx.delete(drizzleSchema.posts)
+      .where(drizzleOrm.eq(drizzleSchema.posts.id, id))
   }).catch((error) => {
-    if (error.code === 'P2025') {
-      throw new AppError('推文不在回收站中', 400)
-    }
     logUtil.info({
       title: '推文删除失败',
       content: String(error)
@@ -148,16 +236,20 @@ export const postDeleteService = async (id: PostInferSelect['id'], query: PostDe
     throw new AppError('推文删除失败')
   })
 
-  const tryDeleteImages = async () => {
-    const imgDelPromises = post.images.map(async (img) => {
-      return await deleteImageByIdWhereNonePost(img.id).catch(() => null)
-    })
-    return await Promise.all(imgDelPromises)
-  }
-  let deletedImages: PromiseReturnType<typeof tryDeleteImages> = []
-  if (query.delateImage === 'true') {
-    deletedImages = await tryDeleteImages()
-  }
+  // 尝试删除图片
+  const deletedImages = await (async () => {
+    if (query.delateImage == null || query.delateImage === 'false') {
+      return []
+    }
+    // else (query.delateImage === 'true')
+    return await Promise.all(
+      post.images.map(async (img) => {
+        return await deleteImageByIdWhereNonePost(
+          img.id
+        ).catch(() => null)
+      })
+    )
+  })()
 
   return {
     deletedPost: post,
@@ -166,9 +258,10 @@ export const postDeleteService = async (id: PostInferSelect['id'], query: PostDe
 }
 
 export const postDeleteAllService = async (query: PostDeleteAllQueryType) => {
-  const posts = await prisma.post.findMany({
-    where: { isDeleted: true },
-    select: { id: true }
+  // 找到
+  const posts = await drizzleDb.query.posts.findMany({
+    where: drizzleOrm.eq(drizzleSchema.posts.isDeleted, true),
+    columns: { id: true }
   })
 
   // del one by one, to avert unexpected error
@@ -183,53 +276,41 @@ export const postDeleteAllService = async (query: PostDeleteAllQueryType) => {
   return results
 }
 
+// TODO
 export const postGetByIdService = async (
   id: PostInferSelect['id'], query?: PostGetByIdQueryType
 ) => {
-  let isDelWhereVal: false | undefined
-  if (
-    query?.keepIsDetele == null ||
-    // eslint-disable-next-line @typescript-eslint/quotes
-    query.keepIsDetele === "false"
-  ) {
-    isDelWhereVal = false
-  } else { // true
-    isDelWhereVal = undefined
-  }
+  const ddWhereDel = (() => {
+    if (
+      query?.keepIsDetele == null ||
+        query.keepIsDetele === 'false'
+    ) {
+      return drizzleOrm.eq(drizzleSchema.posts.isDeleted, false)
+    }
+    return undefined
+  })()
+  const ddWhere = drizzleOrm.and(
+    drizzleOrm.eq(drizzleSchema.posts.id, id),
+    ddWhereDel
+  )
 
-  const post = await prisma.post.findUnique({
-    where: { id, isDeleted: isDelWhereVal },
-    include: {
-      ...postIncludeBase,
+  const post = await drizzleDb.query.posts.findMany({
+    where: ddWhere,
+    with: {
+      ...dbQueryWithOnPost,
       postImports: true,
       postForwards: true,
       parentPost: {
-        where: { isDeleted: isDelWhereVal },
-        include: {
-          ...postIncludeBase,
+        with: {
+          ...dbQueryWithOnPost,
           postImports: true,
           postForwards: true
         }
-      },
-      replies: {
-        where: { isDeleted: isDelWhereVal },
-        include: {
-          ...postIncludeBase,
-          replies: {
-            where: { isDeleted: isDelWhereVal },
-            include: {
-              ...postIncludeBase
-            }
-          }
-        }
       }
+      // replies: {
+      //   whe
+      // }
     }
-  }).catch((error) => {
-    logUtil.info({
-      title: '推文获取失败',
-      content: String(error)
-    })
-    throw new AppError('推文获取失败')
   })
   if (post == null) {
     throw new AppError('推文不存在', 400)

@@ -9,7 +9,7 @@ export const posts = sqliteTable('posts', {
   content: text('content').notNull(),
   isDeleted: integer('is_deleted', { mode: 'boolean' }).notNull().default(false),
   imagesOrder: text('images_order'),
-  parentPostId: text('parent_post_id').references(() => posts.id)
+  parentPostId: text('parent_post_id')
 })
 
 export const postsRelations = relations(posts, ({ many, one }) => ({

@@ -1,22 +1,5 @@
 import { type LogTypeEnumValues } from '@/configs'
-import { type PromiseReturnType } from './util'
-// eslint-disable-next-line @typescript-eslint/consistent-type-imports
-import type { drizzleDb, drizzleSchema } from '@/db'
-
-// 为了推断类型而使用的临时函数
-const fnImageInferQueryWithPostArray = async () => {
-  return await drizzleDb.query.images.findMany({
-    with: {
-      postsToImages: {
-        with: {
-          post: true
-        }
-      }
-    }
-  })
-}
-
-export type ImageInferQueryWithPost = PromiseReturnType<typeof fnImageInferQueryWithPostArray>[number]
+import type { drizzleSchema } from '@/db'
 
 export type PostInferSelect = typeof drizzleSchema.posts.$inferSelect
 export type ImageInferSelect = typeof drizzleSchema.images.$inferSelect

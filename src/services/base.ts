@@ -1,7 +1,13 @@
 import { AppError } from '@/classes'
 import { drizzleDb, drizzleOrm, drizzleSchema } from '@/db'
 import { useImageSystem } from '@/systems'
-import { type ImageInferSelect } from '@/types'
+import { type PostInferSelect, type ImageInferSelect } from '@/types'
+
+export const baseFindPostById = async (id: PostInferSelect['id']) => {
+  return await drizzleDb.query.posts.findFirst({
+    where: drizzleOrm.eq(drizzleSchema.posts.id, id)
+  })
+}
 
 const imageSystem = useImageSystem()
 

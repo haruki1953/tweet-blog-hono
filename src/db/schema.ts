@@ -1,19 +1,31 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core'
+import { sqliteTable, text, integer, primaryKey, foreignKey } from 'drizzle-orm/sqlite-core'
 import { relations, sql } from 'drizzle-orm'
 import { v4 as uuidv4 } from 'uuid'
 import { logTypeEnum, platformKeyEnum } from '@/configs'
 
 // 帖子表
-export const posts = sqliteTable('posts', {
-  id: text('id').primaryKey().$default(() => uuidv4()),
-  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
-  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
-  addedAt: integer('added_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
-  content: text('content').notNull(),
-  isDeleted: integer('is_deleted', { mode: 'boolean' }).notNull().default(false),
-  imagesOrder: text('images_order'),
-  parentPostId: text('parent_post_id')
-})
+export const posts = sqliteTable(
+  'posts',
+  {
+    id: text('id').primaryKey().$default(() => uuidv4()),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+    addedAt: integer('added_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+    content: text('content').notNull(),
+    isDeleted: integer('is_deleted', { mode: 'boolean' }).notNull().default(false),
+    imagesOrder: text('images_order'),
+    parentPostId: text('parent_post_id')
+    // 对于指向自身的外键，这样设置是不行的
+    // .references(() => posts.id)
+  },
+  // 需要通过回调函数来设置指向自身的外键
+  (table) => [
+    foreignKey({
+      columns: [table.parentPostId],
+      foreignColumns: [table.id]
+    })
+  ]
+)
 
 // 图片表
 export const images = sqliteTable('images', {
@@ -33,15 +45,18 @@ export const images = sqliteTable('images', {
 export const postsToImages = sqliteTable(
   'posts_to_images',
   {
-    postId: text('post_id').notNull()
-      .references(() => posts.id),
-    imageId: text('image_id').notNull()
-      .references(() => images.id)
-  }
-  // 复合主键好像导致了已弃用警告
+    postId: text('post_id').notNull().references(() => posts.id),
+    imageId: text('image_id').notNull().references(() => images.id)
+  },
+  // 复合主键好像导致了已弃用警告：
+  // @deprecated — sqliteTable 的第三个参数正在更改，并且只接受数组而不是对象
+  // 原来是需要使用数组来定义复合主键，以此避免弃用警告
   // (t) => ({
   //   pk: primaryKey({ columns: [t.postId, t.imageId] })
   // })
+  (t) => [
+    primaryKey({ columns: [t.postId, t.imageId] })
+  ]
 )
 
 // 帖子转发记录表
@@ -106,7 +121,8 @@ export const logs = sqliteTable('logs', {
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`)
 })
 
-// 关系定义
+/* 关系 */
+
 export const postsRelations = relations(posts, ({ many, one }) => ({
   postsToImages: many(postsToImages, { relationName: 'PostsRelationsPostsToImages' }),
   parentPost: one(posts, {
@@ -122,9 +138,9 @@ export const postsRelations = relations(posts, ({ many, one }) => ({
 }))
 
 export const imagesRelations = relations(images, ({ many }) => ({
-  postsToImages: many(postsToImages, { relationName: 'ImagesRelationsPostsToImages' })
-  // imageImports: many(imageImports, { relationName: 'ImageImports' }),
-  // imageForwards: many(imageForwards, { relationName: 'ImageForwards' })
+  postsToImages: many(postsToImages, { relationName: 'ImagesRelationsPostsToImages' }),
+  imageImports: many(imageImports, { relationName: 'ImageImports' }),
+  imageForwards: many(imageForwards, { relationName: 'ImageForwards' })
 }))
 
 export const postsToImagesRelations = relations(postsToImages, ({ one }) => ({

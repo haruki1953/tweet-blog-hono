@@ -4,7 +4,7 @@ import { useFetchSystem, useImageSystem } from '@/systems'
 import { baseFindImageById, deleteImageByIdWhereNonePost } from './base'
 import { postConfig } from '@/configs'
 import { type ImageInferSelect } from '@/types'
-import { useLogUtil } from '@/utils'
+import { dataDQWImageGetByCursorHandle, dataDQWImageGetByIdHandle, useLogUtil } from '@/utils'
 import { drizzleDb, drizzleOrm, drizzleSchema } from '@/db'
 
 const imageSystem = useImageSystem()
@@ -44,7 +44,7 @@ export const imageSendService = async (
       largeSize,
       originalSize,
       alt: imageInfo?.alt,
-      // 时间之类最后手动指定，因为默认值只以秒为精确度
+      // 时间之类最好动指定，因为默认值只以秒为精确度
       createdAt: imageInfo?.createdAt ?? newDate,
       addedAt: newDate,
       updatedAt: newDate
@@ -77,11 +77,15 @@ export const imageUpdateService = async (
   if (targetImage == null) {
     throw new AppError('图片不存在')
   }
+
+  const newDate = new Date()
+
   // 修改信息
   const updatedImage = await drizzleDb.update(drizzleSchema.images)
     .set({
       alt: imageInfo.alt,
-      createdAt: imageInfo.createdAt
+      createdAt: imageInfo.createdAt,
+      updatedAt: newDate
     })
     .where(drizzleOrm.eq(drizzleSchema.images.id, targetImage.id))
     .returning()
@@ -193,71 +197,98 @@ export const imageDeleteAllOriginalService = async () => {
   return imgOriginalDelList.length
 }
 
-const imageIncludeOnGet = {
-  _count: {
-    select: { posts: true }
-  },
-  posts: {
-    include: {
-      _count: {
-        select: {
-          images: true,
-          replies: true
+// 数据库图片查询时，会with的数据，是在id与游标查询是复用的
+export const dbQueryWithOnImage = {
+  postsToImages: {
+    with: {
+      post: {
+        with: {
+          postsToImages: true,
+          replies: {
+            columns: {
+              id: true
+            }
+          }
         }
       }
     }
   }
-}
+} as const
 
 // src\services\image.ts
 // 通过id查询图片
 export const imageGetByIdService = async (id: ImageInferSelect['id']) => {
-  const image = await prisma.image.findUnique({
-    where: { id },
-    include: { ...imageIncludeOnGet }
+  const image = await drizzleDb.query.images.findFirst({
+    where: drizzleOrm.eq(drizzleSchema.images.id, id),
+    with: dbQueryWithOnImage
   })
   if (image == null) {
     throw new AppError('图片不存在', 400)
   }
-  return image
+  // 数据整理，处理查询数据以符合换为drizzle之前的数据
+  return dataDQWImageGetByIdHandle(image)
 }
 
+// src\services\image.ts
+// 图片游标分页同时关系查询
 export const imageGetByCursorService = async (
   cursorId: ImageInferSelect['id'], query: ImageGetByCursorQueryType
 ) => {
-  // when cursorId is 0, it's first,
-  // skip must be undefined, and cursor is undefined
-  const skip = cursorId === '' ? undefined : 1
-  const cursor = cursorId === '' ? undefined : { id: cursorId }
+  // 在正式查询之前，首先要查询游标对应的数据
+  const cursorData = await (async () => {
+    if (cursorId == null) {
+      return undefined
+    }
+    const data = await baseFindImageById(cursorId)
+    if (data == null) {
+      throw new AppError('图片获取失败 | 游标无效')
+    }
+    return data
+  })()
 
-  let posts
-  if (query.havePost === 'true') {
-    posts = { some: {} }
-  } else if (query.havePost === 'false') {
-    posts = { none: {} }
-  } else { // 'all' | undefined
-    posts = undefined
-  }
+  // 弃用通过 ImageGetByCursorQueryType 来筛选图片（250126弃用）
 
-  let originalSize
-  if (query.haveOriginal === 'true') {
-    originalSize = { not: 0 }
-  } else if (query.haveOriginal === 'false') {
-    originalSize = { equals: 0 }
-  } else { // 'all' | undefined
-    originalSize = undefined
-  }
+  // where使其从游标开始查询
+  const ddWhere = (() => {
+    if (cursorData == null) {
+      return undefined
+    }
+    return drizzleOrm.or(
+      // 查询createdAt比游标所指的小的，因为是createdAt降序排序
+      drizzleOrm.lt(drizzleSchema.images.createdAt, cursorData.createdAt),
+      // 需要考虑到createdAt相同的情况，所以需要借助id来确认createdAt相同时的顺序
+      // 借助id升序降序随便，但要与orderBy相同
+      drizzleOrm.and(
+        drizzleOrm.eq(drizzleSchema.images.createdAt, cursorData.createdAt),
+        drizzleOrm.gt(drizzleSchema.images.id, cursorData.id)
+      )
+    )
+  })()
 
-  const images = await prisma.image.findMany({
-    take: postConfig.imageNumInPage,
-    skip,
-    cursor,
-    where: {
-      posts,
-      originalSize
-    },
-    orderBy: { addedAt: 'desc' },
-    include: { ...imageIncludeOnGet }
+  // orderBy
+  const ddOrderBy = [
+    drizzleOrm.desc(drizzleSchema.images.createdAt),
+    drizzleOrm.asc(drizzleSchema.images.id)
+  ]
+
+  // Limit 分页个数
+  const ddLimit = postConfig.imageNumInPage
+
+  // Offset 分页查询时，需要跳过一个
+  const ddOffset = (() => {
+    if (cursorData == null) {
+      return 0
+    }
+    return 1
+  })()
+
+  const images = await drizzleDb.query.images.findMany({
+    where: ddWhere,
+    orderBy: ddOrderBy,
+    limit: ddLimit,
+    offset: ddOffset,
+    with: dbQueryWithOnImage
   })
-  return images
+
+  return dataDQWImageGetByCursorHandle(images)
 }

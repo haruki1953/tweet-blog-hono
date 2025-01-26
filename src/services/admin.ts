@@ -2,7 +2,7 @@ import { useAdminSystem, useFetchSystem, useImageSystem, useTaskSystem } from '@
 import { type AdminLogGetByCursorParamType, type AdminLogGetByCursorQueryType, type AdminProxyTestJsonType, type AdminUpdateInfoJsonType, type AdminUpdateProxyJsonType } from '@/schemas'
 import { AppError } from '@/classes'
 import { useLogUtil } from '@/utils'
-import { logConfig } from '@/configs'
+import { logConfig, logTypeMap, type LogTypeMapValues } from '@/configs'
 import { sign } from 'hono/jwt'
 import { drizzleDb, drizzleOrm, drizzleSchema } from '@/db'
 
@@ -90,7 +90,7 @@ export const adminLogGetByCursorService = async (
   cursorId: AdminLogGetByCursorParamType['id'], query: AdminLogGetByCursorQueryType
 ) => {
   // 在正式查询之前，首先要查询游标对应的log
-  const cursorLog = await (async () => {
+  const cursorData = await (async () => {
     if (cursorId == null) {
       return undefined
     }
@@ -103,22 +103,42 @@ export const adminLogGetByCursorService = async (
     return logsQuery
   })()
 
+  // where类型查询
+  const selectWhereType = (() => {
+    const typeList: LogTypeMapValues[] = []
+    if (query.error !== 'false') {
+      typeList.push(logTypeMap.error.key)
+    }
+    if (query.warning !== 'false') {
+      typeList.push(logTypeMap.warning.key)
+    }
+    if (query.success !== 'false') {
+      typeList.push(logTypeMap.success.key)
+    }
+    if (query.info !== 'false') {
+      typeList.push(logTypeMap.info.key)
+    }
+    return drizzleOrm.inArray(drizzleSchema.logs.type, typeList)
+  })()
+
   // where使其从游标开始查询
-  const selectWhere = (() => {
-    if (cursorLog == null) {
+  const selectWhereCursor = (() => {
+    if (cursorData == null) {
       return undefined
     }
     return drizzleOrm.or(
       // 查询createdAt比游标所指的小的，因为是createdAt降序排序
-      drizzleOrm.lt(drizzleSchema.logs.createdAt, cursorLog.createdAt),
+      drizzleOrm.lt(drizzleSchema.logs.createdAt, cursorData.createdAt),
       // 需要考虑到createdAt相同的情况，所以需要借助id来确认createdAt相同时的顺序
       // 借助id升序降序随便，但要与orderBy相同
       drizzleOrm.and(
-        drizzleOrm.eq(drizzleSchema.logs.createdAt, cursorLog.createdAt),
-        drizzleOrm.gt(drizzleSchema.logs.id, cursorLog.id)
+        drizzleOrm.eq(drizzleSchema.logs.createdAt, cursorData.createdAt),
+        drizzleOrm.gt(drizzleSchema.logs.id, cursorData.id)
       )
     )
   })()
+
+  const selectWhere = drizzleOrm.and(selectWhereType, selectWhereCursor)
 
   // orderBy
   const selectOrderBy = dbLogsOrderBy
@@ -128,7 +148,7 @@ export const adminLogGetByCursorService = async (
 
   // selectOffset 分页查询时，需要跳过一个
   const selectOffset = (() => {
-    if (cursorLog == null) {
+    if (cursorData == null) {
       return 0
     }
     return 1
@@ -193,7 +213,9 @@ export const adminLogDeleteService = async (num: number) => {
     const logsDelete = await drizzleDb
       .delete(drizzleSchema.logs)
       .where(deleteWhere)
-      .returning()
+      .returning({
+        id: drizzleSchema.logs.id
+      })
     return logsDelete
   })().catch((error) => {
     logUtil.info({
