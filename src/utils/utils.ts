@@ -76,3 +76,15 @@ export const checkForDuplicateStrings = (arr: string[]) => {
   const set = new Set(arr)
   return set.size !== arr.length
 }
+
+// 利用正则表达式处理复杂输入场景，判断输入是否为 LIKE 语法。
+export const parseLikeInput = (input: string): { type: 'LIKE' | 'PLAIN', value: string } => {
+  // 匹配 `%` 或 `_`，但忽略被转义的字符（如 `\%` `\_`）
+  const likePattern = /(^|[^\\])[%_]/
+  // 是like语法
+  if (likePattern.test(input)) {
+    return { type: 'LIKE', value: input }
+  }
+  // 默认普通关键字
+  return { type: 'PLAIN', value: `%${input}%` } // 自动包裹为模糊匹配
+}

@@ -11,7 +11,7 @@ import { baseFindImageById, baseFindPostById, deleteImageByIdWhereNonePost } fro
 import { postConfig } from '@/configs'
 import { type PostInferSelect } from '@/types'
 
-import { dataDQWPostBaseHandle, dataDQWPostSendHandle, useLogUtil } from '@/utils'
+import { dataDQWPostBaseHandle, dataDQWPostGetByCursorHandle, dataDQWPostGetByIdHandle, dataDQWPostSendHandle, parseLikeInput, useLogUtil } from '@/utils'
 import { drizzleDb, drizzleOrm, drizzleSchema } from '@/db'
 
 const logUtil = useLogUtil()
@@ -276,103 +276,54 @@ export const postDeleteAllService = async (query: PostDeleteAllQueryType) => {
   return results
 }
 
-// TODO
+// src\services\post.ts
+// 帖子id查询
 export const postGetByIdService = async (
   id: PostInferSelect['id'], query?: PostGetByIdQueryType
 ) => {
-  const ddWhereDel = (() => {
+  // 是否也查询被删除的
+  const isKeepIsDetele = (() => {
     if (
       query?.keepIsDetele == null ||
         query.keepIsDetele === 'false'
     ) {
-      return drizzleOrm.eq(drizzleSchema.posts.isDeleted, false)
+      return false
     }
-    return undefined
+    return true
   })()
-  const ddWhere = drizzleOrm.and(
-    drizzleOrm.eq(drizzleSchema.posts.id, id),
-    ddWhereDel
-  )
+  const ddWhereDel = (() => {
+    if (isKeepIsDetele) {
+      return undefined
+    }
+    return drizzleOrm.eq(drizzleSchema.posts.isDeleted, false)
+  })()
+  const ddWhereId = drizzleOrm.eq(drizzleSchema.posts.id, id)
 
-  const post = await drizzleDb.query.posts.findMany({
-    where: ddWhere,
+  let post = await drizzleDb.query.posts.findFirst({
+    where: drizzleOrm.and(ddWhereId, ddWhereDel),
     with: {
       ...dbQueryWithOnPost,
       postImports: true,
       postForwards: true,
       parentPost: {
+        // 好像对一的关系无法where，后面自己判断吧
         with: {
           ...dbQueryWithOnPost,
           postImports: true,
           postForwards: true
         }
-      }
-      // replies: {
-      //   whe
-      // }
-    }
-  })
-  if (post == null) {
-    throw new AppError('推文不存在', 400)
-  }
-  return post
-}
-
-export const postGetByCursorService = async (
-  cursorId: PostInferSelect['id'], query: PostGetByCursorQueryType
-) => {
-  // when cursorId is 0, it's first,
-  // skip must be undefined, and cursor is undefined
-  const skip = cursorId === '' ? undefined : 1
-  const cursor = cursorId === '' ? undefined : { id: cursorId }
-
-  // when have content, filtering contains
-  const OR = (
-    query.content === undefined
-      ? undefined
-      : [
-          {
-            content: { contains: query.content }
-          },
-          {
-            images: {
-              some: {
-                alt: {
-                  contains: query.content
-                }
-              }
+      },
+      // 回复，回复的回复
+      replies: {
+        where: ddWhereDel,
+        with: {
+          ...dbQueryWithOnPost,
+          replies: {
+            where: ddWhereDel,
+            with: {
+              ...dbQueryWithOnPost
             }
           }
-        ]
-  )
-
-  let isDeleted: boolean | undefined
-  if (
-    query.isDelete === 'false' ||
-    query.isDelete === undefined
-  ) {
-    isDeleted = false
-  } else if (query.isDelete === 'true') {
-    isDeleted = true
-  } else { // 'all'
-    isDeleted = undefined
-  }
-
-  const posts = await prisma.post.findMany({
-    take: postConfig.postNumInPage,
-    skip,
-    cursor,
-    where: {
-      isDeleted,
-      OR
-    },
-    orderBy: { createdAt: 'desc' },
-    include: {
-      ...postIncludeBase,
-      parentPost: {
-        where: { isDeleted },
-        include: {
-          ...postIncludeBase
         }
       }
     }
@@ -383,5 +334,178 @@ export const postGetByCursorService = async (
     })
     throw new AppError('推文获取失败')
   })
-  return posts
+  if (post == null) {
+    throw new AppError('推文不存在', 400)
+  }
+
+  post = {
+    ...post,
+    // 根据条件控制是否获取parentPost
+    parentPost: (() => {
+      // isKeepIsDetele 意为是否也获取已删除的
+      if (isKeepIsDetele) {
+        return post.parentPost
+      }
+      if (post.parentPost == null) {
+        return post.parentPost
+      }
+      // 排除isDeleted
+      if (post.parentPost.isDeleted) {
+        return null
+      }
+      return post.parentPost
+    })()
+  }
+
+  return dataDQWPostGetByIdHandle(post)
+}
+
+// src\services\post.ts
+// 帖子分页查询
+export const postGetByCursorService = async (
+  cursorId: PostInferSelect['id'], query: PostGetByCursorQueryType
+) => {
+  // 在正式查询之前，首先要查询游标对应的数据
+  const cursorData = await (async () => {
+    if (cursorId == null) {
+      return undefined
+    }
+    const data = await baseFindPostById(cursorId)
+    if (data == null) {
+      throw new AppError('推文游标无效')
+    }
+    return data
+  })()
+
+  // 游标条件
+  const ddWhereCursor = (() => {
+    if (cursorData == null) {
+      return undefined
+    }
+    return drizzleOrm.or(
+      // 查询createdAt比游标所指的小的，因为是createdAt降序排序
+      drizzleOrm.lt(drizzleSchema.posts.createdAt, cursorData.createdAt),
+      // 需要考虑到createdAt相同的情况，所以需要借助id来确认createdAt相同时的顺序
+      // 借助id升序降序随便，但要与orderBy相同
+      drizzleOrm.and(
+        drizzleOrm.eq(drizzleSchema.posts.createdAt, cursorData.createdAt),
+        drizzleOrm.gt(drizzleSchema.posts.id, cursorData.id)
+      )
+    )
+  })()
+
+  // orderBy
+  const ddOrderBy = [
+    drizzleOrm.desc(drizzleSchema.posts.createdAt),
+    drizzleOrm.asc(drizzleSchema.posts.id)
+  ]
+  // Limit 分页个数
+  const ddLimit = postConfig.postNumInPage
+
+  // 查询条件，内容搜索
+  const ddWhereContent = (() => {
+    if (query.content == null) {
+      return undefined
+    }
+    return drizzleOrm.or(
+      // 和content对比
+      drizzleOrm.like(
+        drizzleSchema.posts.content,
+        parseLikeInput(query.content).value
+      ),
+      // 还要和图片的alt对比
+      // exists postsToImages
+      drizzleOrm.exists(
+        drizzleDb.select().from(drizzleSchema.postsToImages).where(
+          drizzleOrm.and(
+            drizzleOrm.eq(drizzleSchema.postsToImages.postId, drizzleSchema.posts.id),
+            // exists images
+            drizzleOrm.exists(
+              drizzleDb.select().from(drizzleSchema.images).where(
+                drizzleOrm.and(
+                  drizzleOrm.eq(drizzleSchema.images.id, drizzleSchema.postsToImages.imageId),
+                  // like images.alt
+                  drizzleOrm.like(
+                    drizzleSchema.images.alt,
+                    parseLikeInput(query.content).value
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  })()
+
+  const isDeleted = (() => {
+    if (
+      query.isDelete === 'false' ||
+      query.isDelete === undefined
+    ) {
+      return false
+    } else if (query.isDelete === 'true') {
+      return true
+    } else { // 'all'
+      return undefined
+    }
+  })()
+  // 查询条件，是否删除
+  const ddWhereDel = (() => {
+    if (isDeleted == null) {
+      return undefined
+    }
+    return drizzleOrm.eq(drizzleSchema.posts.isDeleted, isDeleted)
+  })()
+
+  // 总查询条件
+  const ddWhere = drizzleOrm.and(
+    ddWhereCursor,
+    ddWhereContent,
+    ddWhereDel
+  )
+
+  // 数据库查询
+  let posts = await drizzleDb.query.posts.findMany({
+    where: ddWhere,
+    orderBy: ddOrderBy,
+    limit: ddLimit,
+    with: {
+      ...dbQueryWithOnPost,
+      parentPost: {
+        with: {
+          ...dbQueryWithOnPost
+        }
+      }
+    }
+  }).catch((error) => {
+    logUtil.info({
+      title: '推文获取失败',
+      content: String(error)
+    })
+    throw new AppError('推文获取失败')
+  })
+  // 查询后的处理
+  posts = posts.map((post) => {
+    return {
+      ...post,
+      // 根据条件控制是否获取parentPost
+      parentPost: (() => {
+        if (isDeleted == null) {
+          // isDeleted为undefined即为不筛选
+          return post.parentPost
+        }
+        if (post.parentPost == null) {
+          return post.parentPost
+        }
+        // 获取对应isDeleted的
+        if (post.parentPost.isDeleted === isDeleted) {
+          return post.parentPost
+        }
+        // 否则返回null
+        return null
+      })()
+    }
+  })
+  return dataDQWPostGetByCursorHandle(posts)
 }

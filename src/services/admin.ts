@@ -146,14 +146,6 @@ export const adminLogGetByCursorService = async (
   // selectLimit 分页个数
   const selectLimit = logConfig.logCursorTakeNum
 
-  // selectOffset 分页查询时，需要跳过一个
-  const selectOffset = (() => {
-    if (cursorData == null) {
-      return 0
-    }
-    return 1
-  })()
-
   // select方式的查询，功能更多
   // const logsList = await drizzleDb
   //   .select()
@@ -161,7 +153,6 @@ export const adminLogGetByCursorService = async (
   //   .where(selectWhere)
   //   .orderBy(...selectOrderBy)
   //   .limit(selectLimit)
-  //   .offset(selectOffset)
   //   .catch((error) => {
   //     logUtil.info({
   //       title: '日志获取失败',
@@ -173,8 +164,7 @@ export const adminLogGetByCursorService = async (
   const logsList = await drizzleDb.query.logs.findMany({
     where: selectWhere,
     orderBy: selectOrderBy,
-    limit: selectLimit,
-    offset: selectOffset
+    limit: selectLimit
   }).catch((error) => {
     logUtil.info({
       title: '日志获取失败',

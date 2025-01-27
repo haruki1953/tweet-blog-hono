@@ -1,22 +1,25 @@
 import { AppError } from '@/classes'
+import { drizzleDb, drizzleSchema } from '@/db'
 import { type ProfileUpdateExternalLinksJsonType, type ProfileUpdateSocialMediasJsonType } from '@/schemas'
-import { prisma, useProfileSystem } from '@/systems'
+import { useProfileSystem } from '@/systems'
 import { useLogUtil } from '@/utils'
 
 const profileSystem = useProfileSystem()
 
 const logUtil = useLogUtil()
 
+// src\services\profile.ts
+// 计数
 export const profileGetDataService = async () => {
   // 这里没有where，回收站的帖子也会计数。会被访客调用，所以想这样节省性能
-  const post = await prisma.post.count().catch((error) => {
+  const post = await drizzleDb.$count(drizzleSchema.posts).catch((error) => {
     logUtil.info({
       title: '推文数量统计失败',
       content: String(error)
     })
     throw new AppError('推文数量统计失败')
   })
-  const image = await prisma.image.count().catch((error) => {
+  const image = await drizzleDb.$count(drizzleSchema.images).catch((error) => {
     logUtil.info({
       title: '图片数量统计失败',
       content: String(error)

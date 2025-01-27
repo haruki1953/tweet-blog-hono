@@ -119,12 +119,25 @@ export const imageDeleteService = async (id: ImageInferSelect['id']) => {
 // src\services\image.ts
 // 查询关系
 export const imageDeleteAllService = async () => {
-  // drizzle好像不支持直接查询“没有帖子的图片”，需要自己过滤
-  const images = (await drizzleDb.query.images.findMany({
-    with: {
-      postsToImages: true
+  // // drizzle好像不支持直接查询“没有帖子的图片”，需要自己过滤
+  // const images = (await drizzleDb.query.images.findMany({
+  //   with: {
+  //     postsToImages: true
+  //   }
+  // })).filter(i => i.postsToImages.length === 0)
+  // 好像是可以的
+  const images = await drizzleDb.query.images.findMany({
+    where: drizzleOrm.notExists(
+      drizzleDb.select().from(drizzleSchema.postsToImages)
+        .where(drizzleOrm.eq(
+          drizzleSchema.postsToImages.imageId,
+          drizzleSchema.images.id
+        ))
+    ),
+    columns: {
+      id: true
     }
-  })).filter(i => i.postsToImages.length === 0)
+  })
 
   const imgDelPromises = images.map(async (img) => {
     return await deleteImageByIdWhereNonePost(img.id).catch(() => null)
@@ -241,7 +254,7 @@ export const imageGetByCursorService = async (
     }
     const data = await baseFindImageById(cursorId)
     if (data == null) {
-      throw new AppError('图片获取失败 | 游标无效')
+      throw new AppError('图片游标无效')
     }
     return data
   })()
@@ -274,19 +287,10 @@ export const imageGetByCursorService = async (
   // Limit 分页个数
   const ddLimit = postConfig.imageNumInPage
 
-  // Offset 分页查询时，需要跳过一个
-  const ddOffset = (() => {
-    if (cursorData == null) {
-      return 0
-    }
-    return 1
-  })()
-
   const images = await drizzleDb.query.images.findMany({
     where: ddWhere,
     orderBy: ddOrderBy,
     limit: ddLimit,
-    offset: ddOffset,
     with: dbQueryWithOnImage
   })
 

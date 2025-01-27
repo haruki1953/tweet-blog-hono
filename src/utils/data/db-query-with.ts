@@ -1,4 +1,4 @@
-import { type DQWPostData, type DQWImageData } from '@/types'
+import { type DQWPostData, type DQWImageData, type DQWPostGetById, type DQWPostGetByCursor } from '@/types'
 
 // 数据整理，处理查询数据
 
@@ -25,9 +25,79 @@ export const dataDQWPostBaseHandle = (data: DQWPostData) => {
   return dataDQWPostDataHandle(data)
 }
 
-// 创建帖子后的图片查询数据处理
+// 创建帖子后的查询数据处理
 export const dataDQWPostSendHandle = (data: DQWPostData) => {
   return dataDQWPostDataHandle(data)
+}
+
+// 帖子id查询的查询数据处理
+export const dataDQWPostGetByIdHandle = (data: DQWPostGetById) => {
+  // 处理基本数据
+  const postData = dataDQWPostDataHandle(data)
+  // 处理 postImports postForwards
+  const { postImports, postForwards } = data
+  // 处理parentPost
+  const parentPost = (() => {
+    if (data.parentPost == null) {
+      return null
+    }
+    // 处理基本数据
+    const postData = dataDQWPostDataHandle(data.parentPost)
+    // 处理 postImports postForwards
+    const { postImports, postForwards } = data.parentPost
+    return {
+      ...postData,
+      postImports,
+      postForwards
+    }
+  })()
+  // 处理replies 一级回复
+  const replies = data.replies.map((rp1) => {
+    // 处理基本数据
+    const postData = dataDQWPostDataHandle(rp1)
+    // 处理replies 二级回复
+    const replies = rp1.replies.map((rp2) => {
+      // 处理基本数据
+      const postData = dataDQWPostDataHandle(rp2)
+      return {
+        ...postData
+      }
+    })
+    return {
+      ...postData,
+      replies
+    }
+  })
+  return {
+    ...postData,
+    postImports,
+    postForwards,
+    parentPost,
+    replies
+  }
+}
+
+// 帖子分页查询数据处理
+export const dataDQWPostGetByCursorHandle = (dataList: DQWPostGetByCursor) => {
+  return dataList.map((data) => {
+    // 处理基本数据
+    const postData = dataDQWPostDataHandle(data)
+    // 处理parentPost
+    const parentPost = (() => {
+      if (data.parentPost == null) {
+        return null
+      }
+      // 处理基本数据
+      const postData = dataDQWPostDataHandle(data.parentPost)
+      return {
+        ...postData
+      }
+    })()
+    return {
+      ...postData,
+      parentPost
+    }
+  })
 }
 
 // 图片的数据整理
