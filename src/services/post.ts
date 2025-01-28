@@ -5,7 +5,8 @@ import {
   type PostGetByCursorQueryType,
   type PostGetByIdQueryType,
   type PostDeleteAllQueryType,
-  type PostDeleteQueryType
+  type PostDeleteQueryType,
+  type PostGetByCursorParamType
 } from '@/schemas'
 import { baseFindImageById, baseFindPostById, deleteImageByIdWhereNonePost } from './base'
 import { postConfig } from '@/configs'
@@ -363,7 +364,7 @@ export const postGetByIdService = async (
 // src\services\post.ts
 // 帖子分页查询
 export const postGetByCursorService = async (
-  cursorId: PostInferSelect['id'], query: PostGetByCursorQueryType
+  cursorId: PostGetByCursorParamType['id'], query: PostGetByCursorQueryType
 ) => {
   // 在正式查询之前，首先要查询游标对应的数据
   const cursorData = await (async () => {

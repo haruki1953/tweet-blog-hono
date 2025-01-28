@@ -1,5 +1,6 @@
+import { drizzleDb, drizzleOrm, drizzleSchema } from '@/db'
 import { type PostControlForwardSettingSetJsonType } from '@/schemas'
-import { prisma, useForwardSystem } from '@/systems'
+import { useForwardSystem } from '@/systems'
 
 const forwardSystem = useForwardSystem()
 
@@ -16,31 +17,32 @@ export const postControlForwardSettingSetService = (json: PostControlForwardSett
   return postControlForwardGetService()
 }
 
+// src\services\post-control\control-forward\forward-setting.ts
 // 转发帖子统计
 export const postControlForwardSettingPostCountService = async () => {
   // 帖子总数
-  const totalPostCount = await prisma.post.count({
-    where: {
-      // 回收站中的帖子不计数
-      isDeleted: false
-    }
-  })
+  const totalPostCount = await drizzleDb.$count(
+    drizzleSchema.posts,
+    drizzleOrm.eq(drizzleSchema.posts.isDeleted, false)
+  )
   // 遍历转发配置，统计转发的贴子数
   const { forwardSettingList } = forwardSystem.forwardStore()
   const forwardSettingPostList = await Promise.all(
     forwardSettingList.map(async (forwardSettingItem) => {
       const uuid = forwardSettingItem.uuid
-      const count = await prisma.post.count({
-        where: {
-          isDeleted: false,
-          // 帖子转发记录中存在转发配置的uuid，即代表被转发
-          postForwards: {
-            some: {
-              forwardConfigId: uuid
-            }
-          }
-        }
-      })
+      const count = await drizzleDb.$count(
+        drizzleSchema.posts,
+        drizzleOrm.and(
+          drizzleOrm.eq(drizzleSchema.posts.isDeleted, false),
+          drizzleOrm.exists(
+            drizzleDb.select().from(drizzleSchema.postForwards)
+              .where(drizzleOrm.and(
+                drizzleOrm.eq(drizzleSchema.postForwards.postId, drizzleSchema.posts.id),
+                drizzleOrm.eq(drizzleSchema.postForwards.forwardConfigId, uuid)
+              ))
+          )
+        )
+      )
       return {
         uuid,
         count

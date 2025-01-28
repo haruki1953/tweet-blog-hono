@@ -1,5 +1,5 @@
 import { type PostControlImportJsonType } from '@/schemas'
-import { prisma, useForwardSystem, useTaskSystem } from '@/systems'
+import { useForwardSystem, useTaskSystem } from '@/systems'
 import {
   imageSendByUrlService, imageUpdateService,
   postSendService, postUpdateService,
@@ -10,6 +10,7 @@ import { type ImageInferSelect, type PostInferSelect } from '@/types'
 
 import { useLogUtil } from '@/utils'
 import { platformKeyMap } from '@/configs'
+import { drizzleDb, drizzleOrm, drizzleSchema } from '@/db'
 
 const taskSystem = useTaskSystem()
 
@@ -124,57 +125,53 @@ const postControlImportServicePostImportPart = async (data: {
   if (platform != null && platformId != null && platformLink != null) {
     // 包含platform与platformId，是从平台导入
 
-    // 查询是否存在父贴
+    // 查询是否存在父贴（转发或导入记录中存在platformParentId）
     const parentPost = await (async () => {
       if (platformParentId == null) {
         return undefined
       }
-      return await prisma.post.findFirst({
-        where: {
-          OR: [
-            {
-              postImports: {
-                some: {
-                  platform,
-                  platformPostId: platformParentId
-                }
-              }
-            },
-            {
-              postForwards: {
-                some: {
-                  platform,
-                  platformPostId: platformParentId
-                }
-              }
-            }
-          ]
-        }
+      return await drizzleDb.query.posts.findFirst({
+        where: drizzleOrm.or(
+          drizzleOrm.exists(
+            drizzleDb.select().from(drizzleSchema.postImports)
+              .where(drizzleOrm.and(
+                drizzleOrm.eq(drizzleSchema.postImports.postId, drizzleSchema.posts.id),
+                drizzleOrm.eq(drizzleSchema.postImports.platform, platform),
+                drizzleOrm.eq(drizzleSchema.postImports.platformPostId, platformParentId)
+              ))
+          ),
+          drizzleOrm.exists(
+            drizzleDb.select().from(drizzleSchema.postForwards)
+              .where(drizzleOrm.and(
+                drizzleOrm.eq(drizzleSchema.postForwards.postId, drizzleSchema.posts.id),
+                drizzleOrm.eq(drizzleSchema.postForwards.platform, platform),
+                drizzleOrm.eq(drizzleSchema.postForwards.platformPostId, platformParentId)
+              ))
+          )
+        )
       })
     })()
 
-    // 在 PostImport 中查询，是否已经被导入
-    targetPost = await prisma.post.findFirst({
-      where: {
-        OR: [
-          {
-            postImports: {
-              some: {
-                platform,
-                platformPostId: platformId
-              }
-            }
-          },
-          {
-            postForwards: {
-              some: {
-                platform,
-                platformPostId: platformId
-              }
-            }
-          }
-        ]
-      }
+    // 在 PostImport 中查询，是否已经被导入（转发或导入记录中存在platformId）
+    targetPost = await drizzleDb.query.posts.findFirst({
+      where: drizzleOrm.or(
+        drizzleOrm.exists(
+          drizzleDb.select().from(drizzleSchema.postImports)
+            .where(drizzleOrm.and(
+              drizzleOrm.eq(drizzleSchema.postImports.postId, drizzleSchema.posts.id),
+              drizzleOrm.eq(drizzleSchema.postImports.platform, platform),
+              drizzleOrm.eq(drizzleSchema.postImports.platformPostId, platformId)
+            ))
+        ),
+        drizzleOrm.exists(
+          drizzleDb.select().from(drizzleSchema.postForwards)
+            .where(drizzleOrm.and(
+              drizzleOrm.eq(drizzleSchema.postForwards.postId, drizzleSchema.posts.id),
+              drizzleOrm.eq(drizzleSchema.postForwards.platform, platform),
+              drizzleOrm.eq(drizzleSchema.postForwards.platformPostId, platformId)
+            ))
+        )
+      )
     })
     if (targetPost == null) {
       // 帖子未被导入或转发，创建帖子
@@ -197,20 +194,14 @@ const postControlImportServicePostImportPart = async (data: {
       })
     }
     // 添加导入信息
-    await prisma.post.update({
-      where: {
-        id: targetPost.id
-      },
-      data: {
-        postImports: {
-          create: {
-            platform,
-            platformPostId: platformId,
-            link: platformLink
-          }
-        }
-      }
-    })
+    await drizzleDb.insert(drizzleSchema.postImports)
+      .values({
+        postId: targetPost.id,
+        platform,
+        platformPostId: platformId,
+        link: platformLink,
+        importedAt: new Date()
+      })
   } else {
     // 不包含platform与platformId，是自定义导入
     targetPost = await postSendService({
@@ -232,57 +223,50 @@ const postControlImportServiceImageImportPart = async (data: {
   advancedSettings: PostControlImportJsonType['advancedSettings']
 }): Promise<ImageInferSelect> => {
   const { image, advancedSettings } = data
-  const { platform, platformId, link, alt } = image
+  const { platform, platformId, link, alt, createdAt } = image
   let targetImage
   if (platform != null && platformId != null) {
     // 包含platform与platformId，是从平台导入
-    // 在 imageImport imageForwards 中查询，是否已经被导入或转发
-    targetImage = await prisma.image.findFirst({
-      where: {
-        OR: [
-          {
-            imageImports: {
-              some: {
-                platform,
-                platformImageId: platformId
-              }
-            }
-          },
-          {
-            imageForwards: {
-              some: {
-                platform,
-                platformImageId: platformId
-              }
-            }
-          }
-        ]
-      }
+    // 在 imageImport imageForwards 中查询，是否已经被导入或转发（转发或导入记录中存在platformId）
+    targetImage = await drizzleDb.query.images.findFirst({
+      where: drizzleOrm.or(
+        drizzleOrm.exists(
+          drizzleDb.select().from(drizzleSchema.imageImports)
+            .where(drizzleOrm.and(
+              drizzleOrm.eq(drizzleSchema.imageImports.imageId, drizzleSchema.images.id),
+              drizzleOrm.eq(drizzleSchema.imageImports.platform, platform),
+              drizzleOrm.eq(drizzleSchema.imageImports.platformImageId, platformId)
+            ))
+        ),
+        drizzleOrm.exists(
+          drizzleDb.select().from(drizzleSchema.imageForwards)
+            .where(drizzleOrm.and(
+              drizzleOrm.eq(drizzleSchema.imageForwards.imageId, drizzleSchema.images.id),
+              drizzleOrm.eq(drizzleSchema.imageForwards.platform, platform),
+              drizzleOrm.eq(drizzleSchema.imageForwards.platformImageId, platformId)
+            ))
+        )
+      )
     })
     if (targetImage == null) {
       // 图片未被导入，处理图片
       targetImage = await imageSendByUrlService(link)
     }
-    // 数据库更新Image（主要是alt, imageImport）
-    targetImage = await prisma.image.update({
-      where: {
-        id: targetImage.id
-      },
-      data: {
-        alt,
-        imageImports: {
-          create: {
-            platform,
-            platformImageId: platformId,
-            link
-          }
-        }
-      }
-    })
+    // 数据库更新Image
+    targetImage = await imageUpdateService({ id: targetImage.id, alt, createdAt })
+    // 创建导入记录
+    await drizzleDb.insert(drizzleSchema.imageImports)
+      .values({
+        imageId: targetImage.id,
+        platform,
+        platformImageId: platformId,
+        link,
+        importedAt: new Date()
+      })
   } else {
     // 不包含platform与platformId，是自定义导入，则不用记录导入信息
     targetImage = await imageSendByUrlService(link)
-    targetImage = await imageUpdateService({ id: targetImage.id, alt })
+    targetImage = await imageUpdateService({ id: targetImage.id, alt, createdAt })
   }
   // 尝试关联转发记录
   await postControlImportServiceImageImportPart_TryManualLinking({

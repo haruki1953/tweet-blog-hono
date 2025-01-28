@@ -1,5 +1,5 @@
 import { type LogTypeEnumValues, logTypeMap } from '@/configs'
-import { prisma } from './dependencies'
+import { drizzleDb, drizzleSchema } from '@/db'
 
 export const logWithPromiseReturn = async (data: {
   content: string
@@ -9,13 +9,13 @@ export const logWithPromiseReturn = async (data: {
   const {
     content, title, type = logTypeMap.info.key
   } = data
-  const log = await prisma.log.create({
-    data: {
+  const log = await drizzleDb.insert(drizzleSchema.logs)
+    .values({
       content,
       title,
-      type
-    }
-  })
+      type,
+      createdAt: new Date()
+    })
   return log
 }
 

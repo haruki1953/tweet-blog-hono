@@ -1,3 +1,4 @@
+/* eslint-disable drizzle/enforce-delete-with-where */
 import { AppError } from '@/classes'
 import { imageDeleteOriginalParamSchema, imageDeleteParamSchema, imageGetByCursorParamSchema, imageGetByCursorQuerySchema, imageGetByIdParamSchema, imageUpdateJsonSchema } from '@/schemas'
 import { imageDeleteAllOriginalService, imageDeleteAllService, imageDeleteOriginalService, imageDeleteService, imageGetByCursorService, imageGetByIdService, imageSendService, imageUpdateService } from '@/services'
@@ -128,7 +129,7 @@ router.get(
     const { id } = c.req.valid('param')
     const query = c.req.valid('query')
 
-    const data = await imageGetByCursorService(id ?? '', query)
+    const data = await imageGetByCursorService(id, query)
     c.status(200)
     return c.json(handleResData(0, '获取成功', data))
   }

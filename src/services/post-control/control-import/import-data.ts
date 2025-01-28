@@ -1,82 +1,145 @@
 import { AppError } from '@/classes'
-import { prisma } from '@/systems'
+import { drizzleDb, drizzleOrm, drizzleSchema } from '@/db'
 import { useLogUtil } from '@/utils'
 
 const logUtil = useLogUtil()
 
+// src\services\post-control\control-import\import-data.ts
+// 删除导入记录
 export const postControlDeleteImportDataService = async (id: string) => {
-  const data = await prisma.postImport.delete({
-    where: { id }
-  }).catch((error) => {
-    if (error.code === 'P2025') {
-      throw new AppError('导入记录不存在', 400)
-    }
-    logUtil.info({
-      title: '导入记录删除失败',
-      content: `postImport id: ${id}\n${String(error)}`
+  const deletedPostImports = await drizzleDb.delete(drizzleSchema.postImports)
+    .where(drizzleOrm.eq(
+      drizzleSchema.postImports.id, id
+    ))
+    .returning()
+    .catch((error) => {
+      logUtil.info({
+        title: '导入记录删除失败',
+        content: `postImport id: ${id}\n${String(error)}`
+      })
+      throw new AppError('导入记录删除失败')
     })
+  if (deletedPostImports.length === 0) {
     throw new AppError('导入记录删除失败')
-  })
-  return data
+  }
+  return deletedPostImports[0]
+}
+
+interface QueriedPostImport {
+  id: string
+  postId: string
+  platformPostId: string
+  importedAt: Date
+}
+const getMaxPostImportedAtIds = (data: QueriedPostImport[]): string[] => {
+  // 按 postId 和 platformPostId 分组
+  const grouped: Record<string, QueriedPostImport[]> = {}
+  for (const item of data) {
+    const key = `${item.postId}-${item.platformPostId}`
+    if (grouped[key] == null) {
+      grouped[key] = []
+    }
+    grouped[key].push(item)
+  }
+  // 在每个分组中找到 importedAt 最大的对象
+  const maxImportedAtIds: string[] = []
+  for (const key in grouped) {
+    if (Object.prototype.hasOwnProperty.call(grouped, key)) {
+      let maxItem = grouped[key][0]
+      for (const item of grouped[key]) {
+        if (item.importedAt > maxItem.importedAt) {
+          maxItem = item
+        }
+      }
+      maxImportedAtIds.push(maxItem.id)
+    }
+  }
+  return maxImportedAtIds
+}
+
+interface QueriedImageImport {
+  id: string
+  imageId: string
+  platformImageId: string
+  importedAt: Date
+}
+const getMaxImageImportedAtIds = (data: QueriedImageImport[]): string[] => {
+  // 按 imageId 和 platformImageId 分组
+  const grouped: Record<string, QueriedImageImport[]> = {}
+  for (const item of data) {
+    const key = `${item.imageId}-${item.platformImageId}`
+    if (grouped[key] == null) {
+      grouped[key] = []
+    }
+    grouped[key].push(item)
+  }
+  // 在每个分组中找到 importedAt 最大的对象
+  const maxImportedAtIds: string[] = []
+  for (const key in grouped) {
+    if (Object.prototype.hasOwnProperty.call(grouped, key)) {
+      let maxItem = grouped[key][0]
+      for (const item of grouped[key]) {
+        if (item.importedAt > maxItem.importedAt) {
+          maxItem = item
+        }
+      }
+      maxImportedAtIds.push(maxItem.id)
+    }
+  }
+  return maxImportedAtIds
 }
 
 // 多余的导入记录删除
 export const postControlDeleteImportExcessService = async () => {
   try {
-    // 1. 获取每个帖子id和导入平台帖子id组合的最新importedAt
-    const latestPostImports = await prisma.postImport.groupBy({
-      by: ['postId', 'platformPostId'],
-      _max: {
+    // 帖子和图片，找到全部非多余的导入记录
+    const queriedPostImports = await drizzleDb.query.postImports.findMany({
+      columns: {
+        id: true,
+        postId: true,
+        platformPostId: true,
         importedAt: true
       }
     })
-    // 图片的导入记录也要查找并删除
-    const latestImageImports = await prisma.imageImport.groupBy({
-      by: ['imageId', 'platformImageId'],
-      _max: {
+    const maxPostImportedAtIds = getMaxPostImportedAtIds(queriedPostImports)
+
+    const queriedImageImports = await drizzleDb.query.imageImports.findMany({
+      columns: {
+        id: true,
+        imageId: true,
+        platformImageId: true,
         importedAt: true
       }
     })
+    const maxImageImportedAtIds = getMaxImageImportedAtIds(queriedImageImports)
 
-    // 构建删除条件
-    const deleteConditionsPostImports = []
-    for (const item of latestPostImports) {
-      if (item._max.importedAt == null) {
-        continue
+    // 帖子和图片，删除多余的导入记录，事务
+    const {
+      deletedPostImports,
+      deletedImageImports
+    } = await drizzleDb.transaction(async (drizzleTx) => {
+      const deletedPostImports = await drizzleTx.delete(drizzleSchema.postImports)
+        .where(drizzleOrm.notInArray(
+          drizzleSchema.postImports.id, maxPostImportedAtIds
+        ))
+        .returning({ id: drizzleSchema.postImports.id })
+      const deletedImageImports = await drizzleTx.delete(drizzleSchema.imageImports)
+        .where(drizzleOrm.notInArray(
+          drizzleSchema.imageImports.id, maxImageImportedAtIds
+        ))
+        .returning({ id: drizzleSchema.imageImports.id })
+      return {
+        deletedPostImports,
+        deletedImageImports
       }
-      deleteConditionsPostImports.push({
-        postId: item.postId,
-        platformPostId: item.platformPostId,
-        NOT: {
-          importedAt: item._max.importedAt
-        }
-      })
-    }
-    const deleteConditionsImageImports = []
-    for (const item of latestImageImports) {
-      if (item._max.importedAt == null) {
-        continue
-      }
-      deleteConditionsImageImports.push({
-        imageId: item.imageId,
-        platformImageId: item.platformImageId,
-        NOT: {
-          importedAt: item._max.importedAt
-        }
-      })
-    }
-
-    // 2. 删除不是最新的导入记录
-    const postImport = await prisma.postImport.deleteMany({
-      where: { OR: deleteConditionsPostImports }
     })
-    const imageImport = await prisma.imageImport.deleteMany({
-      where: { OR: deleteConditionsImageImports }
-    })
-
     return {
-      postImport,
-      imageImport
+      postImport: {
+        count: deletedPostImports.length
+      },
+      imageImport: {
+        count: deletedImageImports.length
+      }
     }
   } catch (error) {
     logUtil.info({
@@ -87,22 +150,32 @@ export const postControlDeleteImportExcessService = async () => {
   }
 }
 
+// 删除所有帖子导入记录
 export const postControlDeleteImportAllPostService = async () => {
-  const postImport = await prisma.postImport.deleteMany()
+  // eslint-disable-next-line drizzle/enforce-delete-with-where
+  const deletedPostImports = await drizzleDb.delete(drizzleSchema.postImports)
+    .returning({ id: drizzleSchema.postImports.id })
   return {
-    postImport,
+    postImport: {
+      count: deletedPostImports.length
+    },
     imageImport: {
       count: 0
     }
   }
 }
 
+// 删除所有图片导入记录
 export const postControlDeleteImportAllImageService = async () => {
-  const imageImport = await prisma.imageImport.deleteMany()
+  // eslint-disable-next-line drizzle/enforce-delete-with-where
+  const deleteImageImports = await drizzleDb.delete(drizzleSchema.imageImports)
+    .returning({ id: drizzleSchema.imageImports.id })
   return {
     postImport: {
       count: 0
     },
-    imageImport
+    imageImport: {
+      count: deleteImageImports.length
+    }
   }
 }

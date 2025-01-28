@@ -9,6 +9,7 @@ export const postControlImportJsonSchema = z.object({
     content: z.string().optional(),
     createdAt: z.coerce.date().optional(),
     importImages: z.array(z.object({
+      createdAt: z.coerce.date().optional(),
       link: z.string(),
       alt: z.string().optional(),
       platform: z.enum(platformKeyEnum).optional(),

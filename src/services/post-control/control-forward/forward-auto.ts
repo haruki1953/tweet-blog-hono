@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { type PostControlForwardAutoJsonType } from '@/schemas'
-import { prisma, useForwardSystem, useTaskSystem } from '@/systems'
+import { useForwardSystem, useTaskSystem } from '@/systems'
 import { delayWithInterrupt, useLogUtil } from '@/utils'
 import { postControlForwardPostService } from './forward-post'
 import { forwardingConfig } from '@/configs'
+import { drizzleDb, drizzleOrm, drizzleSchema } from '@/db'
 
 const taskSystem = useTaskSystem()
 const logUtil = useLogUtil()
@@ -196,6 +197,7 @@ const p_GetForwardingPostIdList_NewToOld = async (data: PostControlForwardAutoJs
   return forwardingPostIdList
 }
 
+// src\services\post-control\control-forward\forward-auto.ts
 // 在数据库中寻找父帖，且应未被转帖
 const p_G_NewToOld_PrismaPostFindUniqueByParentPostId = async (
   data: PostControlForwardAutoJsonType & {
@@ -206,17 +208,20 @@ const p_G_NewToOld_PrismaPostFindUniqueByParentPostId = async (
     forwardConfigId,
     postItemParentPostId
   } = data
-  const parentPostItem = await prisma.post.findUnique({
-    where: {
-      id: postItemParentPostId,
-      isDeleted: false,
-      postForwards: {
-        none: {
-          forwardConfigId
-        }
-      }
-    },
-    select: {
+  // 应未被转帖，即代表其转发记录中应没有forwardConfigId相等的
+  const parentPostItem = await drizzleDb.query.posts.findFirst({
+    where: drizzleOrm.and(
+      drizzleOrm.eq(drizzleSchema.posts.id, postItemParentPostId),
+      drizzleOrm.eq(drizzleSchema.posts.isDeleted, false),
+      drizzleOrm.notExists(
+        drizzleDb.select().from(drizzleSchema.postForwards)
+          .where(drizzleOrm.and(
+            drizzleOrm.eq(drizzleSchema.postForwards.postId, drizzleSchema.posts.id),
+            drizzleOrm.eq(drizzleSchema.postForwards.forwardConfigId, forwardConfigId)
+          ))
+      )
+    ),
+    columns: {
       id: true,
       parentPostId: true
     }
@@ -224,6 +229,7 @@ const p_G_NewToOld_PrismaPostFindUniqueByParentPostId = async (
   return parentPostItem
 }
 
+// src\services\post-control\control-forward\forward-auto.ts
 // 在数据库中根据数据查找未转发的帖子
 const p_G_OldOrNew_PrismaPostFindManyByForwardingOrder = async (
   data: PostControlForwardAutoJsonType
@@ -234,31 +240,35 @@ const p_G_OldOrNew_PrismaPostFindManyByForwardingOrder = async (
     forwardingNumber
   } = data
 
-  const valueOrderByCreatedAt = (() => {
+  const orderByCreatedAt = (() => {
     if (forwardingOrder === 'old-to-new') {
       // 从旧到新
-      return 'asc'
+      return drizzleOrm.asc(drizzleSchema.posts.createdAt)
     } else { // 'new-to-old'
       // 从新到旧
-      return 'desc'
+      return drizzleOrm.desc(drizzleSchema.posts.createdAt)
     }
   })()
-  const forwardingPostList = await prisma.post.findMany({
-    where: {
-      isDeleted: false,
+  const orderBy = [
+    orderByCreatedAt,
+    drizzleOrm.asc(drizzleSchema.posts.id)
+  ]
+
+  const forwardingPostList = await drizzleDb.query.posts.findMany({
+    where: drizzleOrm.and(
+      drizzleOrm.eq(drizzleSchema.posts.isDeleted, false),
       // 未转发
-      postForwards: {
-        none: {
-          forwardConfigId
-        }
-      }
-    },
-    orderBy: {
-      // 升序或降序
-      createdAt: valueOrderByCreatedAt
-    },
-    take: forwardingNumber,
-    select: {
+      drizzleOrm.notExists(
+        drizzleDb.select().from(drizzleSchema.postForwards)
+          .where(drizzleOrm.and(
+            drizzleOrm.eq(drizzleSchema.postForwards.postId, drizzleSchema.posts.id),
+            drizzleOrm.eq(drizzleSchema.postForwards.forwardConfigId, forwardConfigId)
+          ))
+      )
+    ),
+    orderBy,
+    limit: forwardingNumber,
+    columns: {
       id: true,
       parentPostId: true
     }

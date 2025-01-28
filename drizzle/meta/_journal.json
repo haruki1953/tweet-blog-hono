@@ -15,6 +15,13 @@
       "when": 1737764181601,
       "tag": "0001_add_logs_table-202501250815",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1738069447794,
+      "tag": "0002_brainy_diamondback",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,5 @@
 import { AppError } from '@/classes'
-import { type ImageGetByCursorQueryType, type ImageUpdateConfigJsonType, type ImageUpdateJsonType } from '@/schemas'
+import { type ImageGetByCursorParamType, type ImageGetByCursorQueryType, type ImageUpdateConfigJsonType, type ImageUpdateJsonType } from '@/schemas'
 import { useFetchSystem, useImageSystem } from '@/systems'
 import { baseFindImageById, deleteImageByIdWhereNonePost } from './base'
 import { postConfig } from '@/configs'
@@ -35,7 +35,7 @@ export const imageSendService = async (
   const newDate = new Date()
 
   // 数据库添加图片
-  const addedImage = await drizzleDb
+  const addedImages = await drizzleDb
     .insert(drizzleSchema.images)
     .values({
       path,
@@ -44,7 +44,7 @@ export const imageSendService = async (
       largeSize,
       originalSize,
       alt: imageInfo?.alt,
-      // 时间之类最好动指定，因为默认值只以秒为精确度
+      // 时间之类最好手动指定，因为默认值只以秒为精确度
       createdAt: imageInfo?.createdAt ?? newDate,
       addedAt: newDate,
       updatedAt: newDate
@@ -57,7 +57,10 @@ export const imageSendService = async (
       })
       throw new AppError('数据库记录失败')
     })
-  return addedImage
+  if (addedImages.length === 0) {
+    throw new AppError('数据库记录失败')
+  }
+  return addedImages[0]
 }
 
 export const imageSendByUrlService = async (
@@ -81,7 +84,7 @@ export const imageUpdateService = async (
   const newDate = new Date()
 
   // 修改信息
-  const updatedImage = await drizzleDb.update(drizzleSchema.images)
+  const updatedImages = await drizzleDb.update(drizzleSchema.images)
     .set({
       alt: imageInfo.alt,
       createdAt: imageInfo.createdAt,
@@ -99,7 +102,10 @@ export const imageUpdateService = async (
       })
       throw new AppError('图片修改失败')
     })
-  return updatedImage
+  if (updatedImages.length === 0) {
+    throw new AppError('图片修改失败')
+  }
+  return updatedImages[0]
 }
 
 export const imageGetConfigService = () => {
@@ -113,7 +119,7 @@ export const imageUpdateConfigService = (
 }
 
 export const imageDeleteService = async (id: ImageInferSelect['id']) => {
-  await deleteImageByIdWhereNonePost(id)
+  return await deleteImageByIdWhereNonePost(id)
 }
 
 // src\services\image.ts
@@ -245,7 +251,7 @@ export const imageGetByIdService = async (id: ImageInferSelect['id']) => {
 // src\services\image.ts
 // 图片游标分页同时关系查询
 export const imageGetByCursorService = async (
-  cursorId: ImageInferSelect['id'], query: ImageGetByCursorQueryType
+  cursorId: ImageGetByCursorParamType['id'], query: ImageGetByCursorQueryType
 ) => {
   // 在正式查询之前，首先要查询游标对应的数据
   const cursorData = await (async () => {
