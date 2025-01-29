@@ -1,3 +1,4 @@
+/* eslint-disable drizzle/enforce-delete-with-where */
 import { profileDeleteAvatarByUuidParamSchema, profileDeleteExternalIconByUuidParamSchema, profileUpdateAboutMdJsonSchema, profileUpdateAvatarJsonSchema, profileUpdateExternalLinksJsonSchema, profileUpdateNameBioJsonSchema, profileUpdateSocialMediasJsonSchema } from '@/schemas'
 import { profileAddAvatarService, profileAddExternalIconService, profileDeleteAvatarByUuidService, profileDeleteAvatarNotUsedService, profileDeleteExternalIconByUuidService, profileDeleteExternalIconNotUsedService, profileGetDataService, profileGetStoreService, profileUpdateAboutMdService, profileUpdateAvatarService, profileUpdateExternalLinksService, profileUpdateNameBioService, profileUpdateSocialMediasService } from '@/services'
 import { handleImageInFormData, handleResData, zValWEH } from '@/helpers'

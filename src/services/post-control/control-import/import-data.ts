@@ -114,31 +114,31 @@ export const postControlDeleteImportExcessService = async () => {
     const maxImageImportedAtIds = getMaxImageImportedAtIds(queriedImageImports)
 
     // 帖子和图片，删除多余的导入记录，事务
-    const {
-      deletedPostImports,
-      deletedImageImports
-    } = await drizzleDb.transaction(async (drizzleTx) => {
-      const deletedPostImports = await drizzleTx.delete(drizzleSchema.postImports)
+    const deletedInfo = drizzleDb.transaction((drizzleTx) => {
+      const deletedPostImports = drizzleTx.delete(drizzleSchema.postImports)
         .where(drizzleOrm.notInArray(
           drizzleSchema.postImports.id, maxPostImportedAtIds
         ))
         .returning({ id: drizzleSchema.postImports.id })
-      const deletedImageImports = await drizzleTx.delete(drizzleSchema.imageImports)
+        .all()
+      const deletedImageImports = drizzleTx.delete(drizzleSchema.imageImports)
         .where(drizzleOrm.notInArray(
           drizzleSchema.imageImports.id, maxImageImportedAtIds
         ))
         .returning({ id: drizzleSchema.imageImports.id })
+        .all()
       return {
         deletedPostImports,
         deletedImageImports
       }
     })
+
     return {
       postImport: {
-        count: deletedPostImports.length
+        count: deletedInfo.deletedPostImports.length
       },
       imageImport: {
-        count: deletedImageImports.length
+        count: deletedInfo.deletedImageImports.length
       }
     }
   } catch (error) {

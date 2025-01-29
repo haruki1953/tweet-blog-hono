@@ -1,3 +1,4 @@
+/* eslint-disable drizzle/enforce-delete-with-where */
 import {
   postControlDeleteForwardDataParamSchema,
   postControlDeleteImportDataParamSchema,

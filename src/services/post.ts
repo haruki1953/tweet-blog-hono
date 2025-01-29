@@ -54,63 +54,72 @@ export const postSendService = async (postInfo: PostSendJsonType) => {
   const newDate = new Date()
 
   // 事务
-  const post = await drizzleDb.transaction(async (drizzleTx) => {
-    // 添加帖子
-    const insertedPosts = await drizzleTx.insert(drizzleSchema.posts)
-      .values({
-        // 时间之类最好手动指定，因为默认值只以秒为精确度
-        createdAt: postInfo.createdAt ?? newDate,
-        addedAt: newDate,
-        updatedAt: newDate,
-        content: postInfo.content ?? '',
-        imagesOrder: (() => {
-          if (postInfo.images == null) {
-            return undefined
-          }
-          return JSON.stringify(postInfo.images)
-        })(),
-        parentPostId: postInfo.parentPostId,
-        isDeleted: postInfo.isDeleted
-      })
-      .returning()
-
-    if (insertedPosts.length === 0) {
-      throw new AppError('帖子添加失败', 500)
-    }
-    const addedPost = insertedPosts[0]
-
-    // 关联图片
-    await (async () => {
-      if (postInfo.images == null) {
-        return
-      }
-      await drizzleTx.insert(drizzleSchema.postsToImages)
-        .values((() => {
-          return postInfo.images.map((imageId) => {
-            return {
-              postId: addedPost.id,
-              imageId
+  let addedPost
+  try {
+    addedPost = drizzleDb.transaction((drizzleTx) => {
+      // 添加帖子
+      const insertedPosts = drizzleTx.insert(drizzleSchema.posts)
+        .values({
+          // 时间之类最好手动指定，因为默认值只以秒为精确度
+          createdAt: postInfo.createdAt ?? newDate,
+          addedAt: newDate,
+          updatedAt: newDate,
+          content: postInfo.content ?? '',
+          imagesOrder: (() => {
+            if (postInfo.images == null) {
+              return undefined
             }
-          })
-        })())
-    })()
+            return JSON.stringify(postInfo.images)
+          })(),
+          parentPostId: postInfo.parentPostId,
+          isDeleted: postInfo.isDeleted
+        })
+        .returning()
+        .all()
 
-    // 最后再次查询帖子数据
-    const post = await drizzleDb.query.posts.findFirst({
-      where: drizzleOrm.eq(drizzleSchema.posts.id, addedPost.id),
-      with: dbQueryWithOnPost
+      if (insertedPosts.length === 0) {
+        throw new AppError('帖子添加失败', 500)
+      }
+      const addedPost = insertedPosts[0]
+
+      // 关联图片
+      ;(() => {
+        if (postInfo.images == null) {
+          return
+        }
+        if (postInfo.images.length === 0) {
+          return
+        }
+        drizzleTx.insert(drizzleSchema.postsToImages)
+          .values((() => {
+            return postInfo.images.map((imageId) => {
+              return {
+                postId: addedPost.id,
+                imageId
+              }
+            })
+          })())
+          .run()
+      })()
+
+      return addedPost
     })
-    if (post == null) {
-      throw new AppError('帖子添加失败', 500)
-    }
-    return post
-  }).catch((error) => {
+  } catch (error) {
     logUtil.info({
       title: '推文添加失败',
       content: String(error)
     })
     throw new AppError('推文添加失败')
+  }
+
+  // 最后再次查询帖子数据
+  const post = await drizzleDb.query.posts.findFirst({
+    where: drizzleOrm.eq(drizzleSchema.posts.id, addedPost.id),
+    with: dbQueryWithOnPost
   })
+  if (post == null) {
+    throw new AppError('帖子添加失败', 500)
+  }
 
   return dataDQWPostSendHandle(post)
 }
@@ -147,65 +156,69 @@ export const postUpdateService = async (postInfo: PostUpdateJsonType) => {
   const newDate = new Date()
 
   // 事务
-  const post = await drizzleDb.transaction(async (drizzleTx) => {
-    // 更新数据
-    await drizzleTx.update(drizzleSchema.posts)
-      .set({
-        // 时间之类最好手动指定，因为默认值只以秒为精确度
-        createdAt: postInfo.createdAt,
-        updatedAt: newDate,
-        content: postInfo.content,
-        imagesOrder: (() => {
-          if (postInfo.images == null) {
-            return undefined
-          }
-          return JSON.stringify(postInfo.images)
-        })(),
-        parentPostId: postInfo.parentPostId,
-        isDeleted: postInfo.isDeleted
-      })
-      .where(drizzleOrm.eq(drizzleSchema.posts.id, postInfo.id))
-      .returning()
-
-    // 更新图片
-    await (async () => {
-      if (postInfo.images == null) {
-        return
-      }
-      // 首先清空本帖子与图片的关联
-      await drizzleTx.delete(drizzleSchema.postsToImages)
-        .where(drizzleOrm.eq(drizzleSchema.postsToImages.postId, postInfo.id))
-      // 然后进行关联
-      await drizzleTx.insert(drizzleSchema.postsToImages)
-        .values((() => {
-          return postInfo.images.map((imageId) => {
-            return {
-              postId: postInfo.id,
-              imageId
+  try {
+    drizzleDb.transaction((drizzleTx) => {
+      // 更新数据
+      drizzleTx.update(drizzleSchema.posts)
+        .set({
+          // 时间之类最好手动指定，因为默认值只以秒为精确度
+          createdAt: postInfo.createdAt,
+          updatedAt: newDate,
+          content: postInfo.content,
+          imagesOrder: (() => {
+            if (postInfo.images == null) {
+              return undefined
             }
-          })
-        })())
-    })()
+            return JSON.stringify(postInfo.images)
+          })(),
+          parentPostId: postInfo.parentPostId,
+          isDeleted: postInfo.isDeleted
+        })
+        .where(drizzleOrm.eq(drizzleSchema.posts.id, postInfo.id))
+        .run()
 
-    // 最后再次查询帖子数据
-    const post = await drizzleDb.query.posts.findFirst({
-      where: drizzleOrm.eq(drizzleSchema.posts.id, postInfo.id),
-      with: dbQueryWithOnPost
+      // 更新图片
+      ;(() => {
+        if (postInfo.images == null) {
+          return
+        }
+        // 首先清空本帖子与图片的关联
+        drizzleTx.delete(drizzleSchema.postsToImages)
+          .where(drizzleOrm.eq(drizzleSchema.postsToImages.postId, postInfo.id))
+          .run()
+        // 然后进行关联
+        if (postInfo.images.length === 0) {
+          return
+        }
+        drizzleTx.insert(drizzleSchema.postsToImages)
+          .values((() => {
+            return postInfo.images.map((imageId) => {
+              return {
+                postId: postInfo.id,
+                imageId
+              }
+            })
+          })())
+          .run()
+      })()
     })
-    if (post == null) {
-      throw new AppError('帖子更新失败', 500)
-    }
-    return post
-  }).catch((error) => {
+  } catch (error) {
     logUtil.info({
       title: '推文修改失败',
       content: String(error)
     })
     throw new AppError('推文修改失败')
-  })
+  }
 
-  // 返回响应 类型和帖子发送一致
-  return dataDQWPostSendHandle(post)
+  // 最后再次查询帖子数据
+  const post = await drizzleDb.query.posts.findFirst({
+    where: drizzleOrm.eq(drizzleSchema.posts.id, postInfo.id),
+    with: dbQueryWithOnPost
+  })
+  if (post == null) {
+    throw new AppError('帖子更新失败', 500)
+  }
+  return post
 }
 
 // src\services\post.ts
@@ -222,20 +235,24 @@ export const postDeleteService = async (id: PostInferSelect['id'], query: PostDe
   const post = dataDQWPostBaseHandle(targetPost)
 
   // 事务
-  await drizzleDb.transaction(async (drizzleTx) => {
-    // 解除图片关联
-    await drizzleTx.delete(drizzleSchema.postsToImages)
-      .where(drizzleOrm.eq(drizzleSchema.postsToImages.postId, id))
-    // 删除帖子
-    await drizzleTx.delete(drizzleSchema.posts)
-      .where(drizzleOrm.eq(drizzleSchema.posts.id, id))
-  }).catch((error) => {
+  try {
+    drizzleDb.transaction((drizzleTx) => {
+      // 解除图片关联
+      drizzleTx.delete(drizzleSchema.postsToImages)
+        .where(drizzleOrm.eq(drizzleSchema.postsToImages.postId, id))
+        .run()
+      // 删除帖子
+      drizzleTx.delete(drizzleSchema.posts)
+        .where(drizzleOrm.eq(drizzleSchema.posts.id, id))
+        .run()
+    })
+  } catch (error) {
     logUtil.info({
       title: '推文删除失败',
       content: String(error)
     })
     throw new AppError('推文删除失败')
-  })
+  }
 
   // 尝试删除图片
   const deletedImages = await (async () => {

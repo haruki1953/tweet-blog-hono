@@ -11,7 +11,9 @@ staticConfig.files.forEach((file) => {
     getContent: async (path, c) => {
       try {
         const content = await fsp.readFile(path)
-        return content
+        // 有类型问题，但是运行时没问题，先as了
+        // getContent 需要返回的是 Data | Response | null
+        return content as any
       } catch (error) {
         return null
       }

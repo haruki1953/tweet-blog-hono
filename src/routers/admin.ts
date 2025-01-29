@@ -1,3 +1,4 @@
+/* eslint-disable drizzle/enforce-delete-with-where */
 import { adminLogDeleteParamSchema, adminLogGetByCursorParamSchema, adminLogGetByCursorQuerySchema, adminProxyTestJsonSchema, adminTaskAbortParam, adminUpdateAuthJsonSchema, adminUpdateInfoJsonSchema, adminUpdateProxyJsonSchema, imageUpdateConfigJsonSchema } from '@/schemas'
 import { adminGetInfoService, adminGetTaskService, adminLogDeleteService, adminLogGetByCursorService, adminProxyTestService, adminTaskAbortService, adminTaskDeleteService, adminUpdateAuthService, adminUpdateInfoService, adminUpdateProxyService, imageUpdateConfigService } from '@/services'
 import { useAdminSystem } from '@/systems'
