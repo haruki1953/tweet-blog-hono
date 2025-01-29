@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, primaryKey, foreignKey } from 'drizzle-orm/sqlite-core'
+import { sqliteTable, text, integer, primaryKey, foreignKey, index } from 'drizzle-orm/sqlite-core'
 import { relations, sql } from 'drizzle-orm'
 import { v4 as uuidv4 } from 'uuid'
 import { logTypeEnum, platformKeyEnum } from '@/configs'
@@ -22,24 +22,33 @@ export const posts = sqliteTable(
   (table) => [
     foreignKey({
       columns: [table.parentPostId],
-      foreignColumns: [table.id]
-    })
+      foreignColumns: [table.id],
+      name: 'fk-posts-parent_post_id'
+    }),
+    index('idx-posts-created_at').on(table.createdAt),
+    index('idx-posts-parent_post_id').on(table.parentPostId)
   ]
 )
 
 // 图片表
-export const images = sqliteTable('images', {
-  id: text('id').primaryKey().$default(() => uuidv4()),
-  alt: text('alt'),
-  path: text('path').notNull(),
-  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
-  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
-  addedAt: integer('added_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
-  smallSize: integer('small_size').notNull().default(0),
-  largeSize: integer('large_size').notNull().default(0),
-  originalSize: integer('original_size').notNull().default(0),
-  originalPath: text('original_path')
-})
+export const images = sqliteTable(
+  'images',
+  {
+    id: text('id').primaryKey().$default(() => uuidv4()),
+    alt: text('alt'),
+    path: text('path').notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+    addedAt: integer('added_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+    smallSize: integer('small_size').notNull().default(0),
+    largeSize: integer('large_size').notNull().default(0),
+    originalSize: integer('original_size').notNull().default(0),
+    originalPath: text('original_path')
+  },
+  (table) => [
+    index('idx-images-created_at').on(table.createdAt)
+  ]
+)
 
 // 帖子与图片的多对多关系表
 export const postsToImages = sqliteTable(
@@ -60,66 +69,97 @@ export const postsToImages = sqliteTable(
 )
 
 // 帖子转发记录表
-export const postForwards = sqliteTable('post_forwards', {
-  id: text('id').primaryKey().$default(() => uuidv4()),
-  platform: text('platform', {
+export const postForwards = sqliteTable(
+  'post_forwards',
+  {
+    id: text('id').primaryKey().$default(() => uuidv4()),
+    platform: text('platform', {
     // Drizzle居然支持元组，这下可以统一用configs管理了
-    enum: platformKeyEnum
-  }).notNull(),
-  platformPostId: text('platform_post_id').notNull(),
-  link: text('link').notNull(),
-  forwardAt: integer('forward_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
-  forwardConfigId: text('forward_config_id').notNull(),
-  postId: text('post_id').notNull().references(() => posts.id, { onDelete: 'cascade' })
-})
+      enum: platformKeyEnum
+    }).notNull(),
+    platformPostId: text('platform_post_id').notNull(),
+    link: text('link').notNull(),
+    forwardAt: integer('forward_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+    forwardConfigId: text('forward_config_id').notNull(),
+    postId: text('post_id').notNull().references(() => posts.id, { onDelete: 'cascade' })
+  },
+  (table) => [
+    index('idx-post_forwards-post_id').on(table.postId)
+  ]
+)
 
 // 帖子导入记录表
-export const postImports = sqliteTable('post_imports', {
-  id: text('id').primaryKey().$default(() => uuidv4()),
-  platform: text('platform', {
-    enum: platformKeyEnum
-  }).notNull(),
-  platformPostId: text('platform_post_id').notNull(),
-  link: text('link').notNull(),
-  importedAt: integer('imported_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
-  postId: text('post_id').notNull().references(() => posts.id, { onDelete: 'cascade' })
-})
+export const postImports = sqliteTable(
+  'post_imports',
+  {
+    id: text('id').primaryKey().$default(() => uuidv4()),
+    platform: text('platform', {
+      enum: platformKeyEnum
+    }).notNull(),
+    platformPostId: text('platform_post_id').notNull(),
+    link: text('link').notNull(),
+    importedAt: integer('imported_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+    postId: text('post_id').notNull().references(() => posts.id, { onDelete: 'cascade' })
+  },
+  (table) => [
+    index('idx-post_imports-post_id').on(table.postId)
+  ]
+)
 
 // 图片转发记录表
-export const imageForwards = sqliteTable('image_forwards', {
-  id: text('id').primaryKey().$default(() => uuidv4()),
-  platform: text('platform', {
-    enum: platformKeyEnum
-  }).notNull(),
-  platformImageId: text('platform_image_id').notNull(),
-  link: text('link').notNull(),
-  forwardAt: integer('forward_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
-  forwardConfigId: text('forward_config_id').notNull(),
-  imageId: text('image_id').notNull().references(() => images.id, { onDelete: 'cascade' })
-})
+export const imageForwards = sqliteTable(
+  'image_forwards',
+  {
+    id: text('id').primaryKey().$default(() => uuidv4()),
+    platform: text('platform', {
+      enum: platformKeyEnum
+    }).notNull(),
+    platformImageId: text('platform_image_id').notNull(),
+    link: text('link').notNull(),
+    forwardAt: integer('forward_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+    forwardConfigId: text('forward_config_id').notNull(),
+    imageId: text('image_id').notNull().references(() => images.id, { onDelete: 'cascade' })
+  },
+  (table) => [
+    index('idx-image_forwards-image_id').on(table.imageId)
+  ]
+)
 
 // 图片导入记录表
-export const imageImports = sqliteTable('image_imports', {
-  id: text('id').primaryKey().$default(() => uuidv4()),
-  platform: text('platform', {
-    enum: platformKeyEnum
-  }).notNull(),
-  platformImageId: text('platform_image_id').notNull(),
-  link: text('link').notNull(),
-  importedAt: integer('imported_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
-  imageId: text('image_id').notNull().references(() => images.id, { onDelete: 'cascade' })
-})
+export const imageImports = sqliteTable(
+  'image_imports',
+  {
+    id: text('id').primaryKey().$default(() => uuidv4()),
+    platform: text('platform', {
+      enum: platformKeyEnum
+    }).notNull(),
+    platformImageId: text('platform_image_id').notNull(),
+    link: text('link').notNull(),
+    importedAt: integer('imported_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+    imageId: text('image_id').notNull().references(() => images.id, { onDelete: 'cascade' })
+  },
+  (table) => [
+    index('idx-image_imports-image_id').on(table.imageId)
+  ]
+)
 
 // 日志表
-export const logs = sqliteTable('logs', {
-  id: text('id').primaryKey().$default(() => uuidv4()),
-  title: text('title'),
-  content: text('content').notNull(),
-  type: text('type', {
-    enum: logTypeEnum
-  }).notNull(),
-  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`)
-})
+export const logs = sqliteTable(
+  'logs',
+  {
+    id: text('id').primaryKey().$default(() => uuidv4()),
+    title: text('title'),
+    content: text('content').notNull(),
+    type: text('type', {
+      enum: logTypeEnum
+    }).notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`)
+  },
+  (table) => [
+    index('idx-logs-created_at').on(table.createdAt),
+    index('idx-logs-type').on(table.type)
+  ]
+)
 
 /* 关系 */
 
