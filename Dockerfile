@@ -36,18 +36,6 @@ ENV https_proxy=
 FROM base AS runner
 WORKDIR /app
 
-# 设置代理
-ENV http_proxy=http://192.168.2.110:10811/
-ENV https_proxy=http://192.168.2.110:10811/
-
-# 安装pnpm
-RUN npm install -g pnpm && \
-    npm cache clean --force
-
-# 取消代理
-ENV http_proxy=
-ENV https_proxy=
-
 # 复制文件
 COPY --from=builder /app/entrypoint.sh /app/entrypoint.sh
 COPY --from=builder /app/package.json /app/package.json
@@ -60,7 +48,7 @@ COPY --from=builder /app/static /app/static
 VOLUME ["/app/data"]
 
 # 设置端口
-ENV TWEET_BLOG_HONO_PORT=51125
+ENV TWEBLOG_PORT=51125
 EXPOSE 51125
 
 ENTRYPOINT ["sh", "entrypoint.sh"]
