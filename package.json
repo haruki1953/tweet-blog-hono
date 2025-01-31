@@ -1,6 +1,6 @@
 {
   "name": "tweet-blog-hono",
-  "version": "0.0.2",
+  "version": "1.0.0",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "lint": "eslint --ext .ts src",
