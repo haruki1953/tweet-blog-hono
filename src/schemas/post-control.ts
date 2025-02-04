@@ -15,6 +15,7 @@ export const postControlImportJsonSchema = z.object({
       platform: z.enum(platformKeyEnum).optional(),
       platformId: z.string().optional()
     })),
+    // 不再将帖子的图片限制为4个
     // .max(postConfig.postMaxImages)
     platform: z.enum(platformKeyEnum).optional(),
     platformId: z.string().optional(),

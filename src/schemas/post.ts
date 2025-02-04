@@ -1,4 +1,3 @@
-import { postConfig } from '@/configs'
 import { z } from 'zod'
 import { type IdParamType, idParamSchema } from './base'
 
@@ -6,13 +5,11 @@ const id = z.string()
 
 export const postSendJsonSchema = z.object({
   content: z.string().optional(),
-  images: z.array(id).max(postConfig.postMaxImages).optional(),
-  createdAt: z.coerce.date()
-    // .min(new Date('1971-01-01'), { message: 'Too old' })
-    .optional(),
+  images: z.array(id).optional(),
+  // 不再将帖子的图片限制为4个
+  // .max(postConfig.postMaxImages)
+  createdAt: z.coerce.date().optional(),
   parentPostId: id.nullable().optional(),
-  // twitterId: z.string().nullable().optional(),
-  // twitterLink: z.string().nullable().optional(),
   isDeleted: z.boolean().optional()
 })
 export type PostSendJsonType = z.infer<typeof postSendJsonSchema>

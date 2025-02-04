@@ -7,7 +7,8 @@ if (Number.isNaN(httpPort)) {
 export { httpPort }
 
 export const postConfig = {
-  postMaxImages: 4,
+  // 不再将帖子的图片限制为4个
+  // postMaxImages: 4,
   postNumInPage: 20,
   imageNumInPage: 20
 } as const
