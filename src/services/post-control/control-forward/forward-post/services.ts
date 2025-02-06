@@ -24,7 +24,10 @@ const postControlForwardPostService_SwitchPlatformPart = async (
 ): Promise<ReturnForForwardPost> => {
   if (isDataForPlatform(data, platformKeyMap.X.key)) {
     // 调用 X/Twitter 的转发方法
-    return await forwardPostXtwitterService(data)
+    return await forwardPostXtwitterService(data).catch((error) => {
+      console.log(error)
+      throw error
+    })
   }
 
   throw new AppError('当前平台暂不支持转发', 400)
