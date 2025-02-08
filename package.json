@@ -12,6 +12,7 @@
     "bcryptjs": "^2.4.3",
     "better-sqlite3": "^11.8.1",
     "drizzle-orm": "^0.38.4",
+    "form-data": "^4.0.1",
     "hono": "^4.6.11",
     "https-proxy-agent": "^7.0.6",
     "jimp": "0.22.12",

@@ -26,17 +26,19 @@ const forwardSettingDataDefaultX: z.infer<typeof forwardSettingDataSchemaX> = {
   'Access Token': '',
   'Access Token Secret': ''
 }
-// 用于测试
-const forwardSettingDataSchemaT = z.object({
-  token: z.string()
+// 添加 Telegram 所需的认证信息
+const forwardSettingDataSchemaTelegram = z.object({
+  'Bot Token': z.string(),
+  'Chat Id': z.string()
 })
-const forwardSettingDataDefaultT: z.infer<typeof forwardSettingDataSchemaT> = {
-  token: ''
+const forwardSettingDataDefaultTelegram: z.infer<typeof forwardSettingDataSchemaTelegram> = {
+  'Bot Token': '',
+  'Chat Id': ''
 }
 // 全部平台的 forwardSettingDataDefault
 export const forwardSettingDataDefaultAll = {
   ...forwardSettingDataDefaultX,
-  ...forwardSettingDataDefaultT
+  ...forwardSettingDataDefaultTelegram
 }
 
 // 关于导入与导出所需的平台数据
@@ -53,18 +55,18 @@ export const platformKeyMap = {
     forwardSettingDataSchema: forwardSettingDataSchemaX,
     forwardSettingDataDefault: forwardSettingDataDefaultX
   },
-  T: {
-    key: 'T',
-    name: 'Test',
-    fontawesomeClass: 'fa-brands fa-font-awesome',
-    couldImport: false,
-    couldForward: false,
-    forwardSettingDataSchema: forwardSettingDataSchemaT,
-    forwardSettingDataDefault: forwardSettingDataDefaultT
+  Telegram: {
+    key: 'Telegram',
+    name: 'Telegram',
+    fontawesomeClass: 'fa-brands fa-telegram',
+    couldImport: true,
+    couldForward: true,
+    forwardSettingDataSchema: forwardSettingDataSchemaTelegram,
+    forwardSettingDataDefault: forwardSettingDataDefaultTelegram
   }
 } as const
 // 这个手动写出来的原因是，zod枚举需要字面量类型数组
-export const platformKeyEnum = ['X', 'T'] as const
+export const platformKeyEnum = ['X', 'Telegram'] as const
 
 // 类型检查以确保 platformKeyEnum 与 platformKeyMap 的值是同步的
 export type PlatformKeyMapValues =
