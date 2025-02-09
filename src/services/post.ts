@@ -237,6 +237,15 @@ export const postDeleteService = async (id: PostInferSelect['id'], query: PostDe
   // 事务
   try {
     drizzleDb.transaction((drizzleTx) => {
+      // 解除回复关联
+      if (post._count.replies > 0) {
+        drizzleTx.update(drizzleSchema.posts)
+          .set({
+            parentPostId: null
+          })
+          .where(drizzleOrm.eq(drizzleSchema.posts.parentPostId, id))
+          .run()
+      }
       // 解除图片关联
       drizzleTx.delete(drizzleSchema.postsToImages)
         .where(drizzleOrm.eq(drizzleSchema.postsToImages.postId, id))
