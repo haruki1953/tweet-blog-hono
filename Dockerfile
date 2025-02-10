@@ -12,7 +12,7 @@ ENV https_proxy=http://192.168.2.110:10811/
 COPY package.json pnpm-lock.yaml ./
 
 # 安装 pnpm、安装依赖
-RUN npm install -g pnpm && \
+RUN npm install -g pnpm@8.15.3 && \
     pnpm install --frozen-lockfile
 
 # 复制文件 tsconfig.json 和 entrypoint.sh
