@@ -2,7 +2,7 @@ import { AppError } from '@/classes'
 import { type PostControlForwardPostJsonType } from '@/schemas'
 import { useForwardSystem } from '@/systems'
 import { type PlatformKeyEnumValues, platformKeyMap } from '@/configs'
-import { forwardPostTelegramService, forwardPostXtwitterService } from './post-platform'
+import { forwardPostTelegramService, forwardPostXtwitterService, forwardPostDiscordService } from './post-platform'
 import { dataImageBestLocalImagePath, dataPostHandleImagesOrder, useLogUtil } from '@/utils'
 import {
   postControlForwardManualLinkingImageService,
@@ -29,6 +29,10 @@ const postControlForwardPostService_SwitchPlatformPart = async (
   if (isDataForPlatform(data, platformKeyMap.Telegram.key)) {
     // 调用 Telegram 的转发方法
     return await forwardPostTelegramService(data)
+  }
+  if (isDataForPlatform(data, platformKeyMap.Discord.key)) {
+    // 调用 Discord 的转发方法
+    return await forwardPostDiscordService(data)
   }
 
   throw new AppError('当前平台暂不支持转发', 400)
