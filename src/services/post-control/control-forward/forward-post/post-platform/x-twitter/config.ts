@@ -5,6 +5,7 @@ export const xtwitterConfig = {
   linkCharacterCountRepresentationInPost: 23,
   // 发推时的最大字数
   maxPostCharactersOnSend: 280,
+  maxAltCharactersOnSend: 1000,
   // 最大图片数
   maxImageNumberOnSend: 4
 } as const

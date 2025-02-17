@@ -54,7 +54,8 @@ export const forwardPostXtwitterService = async (
       if (targetImageData.alt !== null) {
         // 设置alt
         await twitterClient.v1.createMediaMetadata(mediaId, {
-          alt_text: { text: targetImageData.alt }
+          // 【250215】避免alt超过限制
+          alt_text: { text: targetImageData.alt.slice(0, xtwitterConfig.maxAltCharactersOnSend) }
         })
       }
       return {

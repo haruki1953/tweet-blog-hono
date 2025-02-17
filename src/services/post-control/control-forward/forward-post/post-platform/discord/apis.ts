@@ -4,6 +4,7 @@ import { useLogUtil } from '@/utils'
 import FormData from 'form-data'
 import { z } from 'zod'
 import fs from 'fs'
+import { discordConfig } from './configs'
 
 const fetchSystem = useFetchSystem()
 const logUtil = useLogUtil()
@@ -48,7 +49,7 @@ export const discordCreateMessageApi = async (parameter: {
     form.append(`files[${index}]`, fs.createReadStream(item.localLargeImagePath))
     attachments.push({
       id: index,
-      description: item.alt ?? undefined
+      description: item.alt?.slice(0, discordConfig.maxAltCharactersOnSend) ?? undefined
     })
   })
   form.append('payload_json', JSON.stringify({

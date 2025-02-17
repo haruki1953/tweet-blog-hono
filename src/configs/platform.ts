@@ -14,10 +14,10 @@ import { z } from 'zod'
 // 转发配置中，各平台所对应的 data 数据结构
 // X / Twitter
 const forwardSettingDataSchemaX = z.object({
-  'API Key': z.string(),
-  'API Key Secret': z.string(),
-  'Access Token': z.string(),
-  'Access Token Secret': z.string()
+  'API Key': z.string().default(''),
+  'API Key Secret': z.string().default(''),
+  'Access Token': z.string().default(''),
+  'Access Token Secret': z.string().default('')
 })
 // data 数据例，前端要用
 const forwardSettingDataDefaultX: z.infer<typeof forwardSettingDataSchemaX> = {
@@ -28,8 +28,8 @@ const forwardSettingDataDefaultX: z.infer<typeof forwardSettingDataSchemaX> = {
 }
 // 添加 Telegram 所需的认证信息
 const forwardSettingDataSchemaTelegram = z.object({
-  'Bot Token': z.string(),
-  'Chat Id': z.string()
+  'Bot Token': z.string().default(''),
+  'Chat Id': z.string().default('')
 })
 const forwardSettingDataDefaultTelegram: z.infer<
   typeof forwardSettingDataSchemaTelegram
@@ -39,9 +39,9 @@ const forwardSettingDataDefaultTelegram: z.infer<
 }
 // Discord
 const forwardSettingDataSchemaDiscord = z.object({
-  Authorization: z.string(),
-  'Guild Id': z.string(),
-  'Channel Id': z.string()
+  Authorization: z.string().default(''),
+  'Guild Id': z.string().default(''),
+  'Channel Id': z.string().default('')
 })
 const forwardSettingDataDefaultDiscord: z.infer<
   typeof forwardSettingDataSchemaDiscord
