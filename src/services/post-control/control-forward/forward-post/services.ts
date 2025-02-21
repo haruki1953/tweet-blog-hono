@@ -2,7 +2,7 @@ import { AppError } from '@/classes'
 import { type PostControlForwardPostJsonType } from '@/schemas'
 import { useForwardSystem } from '@/systems'
 import { type PlatformKeyEnumValues, platformKeyMap } from '@/configs'
-import { forwardPostTelegramService, forwardPostXtwitterService, forwardPostDiscordService } from './post-platform'
+import { forwardPostTelegramService, forwardPostXtwitterService, forwardPostDiscordService, forwardPostBlueskyService } from './post-platform'
 import { dataImageBestLocalImagePath, dataPostHandleImagesOrder, useLogUtil } from '@/utils'
 import {
   postControlForwardManualLinkingImageService,
@@ -33,6 +33,10 @@ const postControlForwardPostService_SwitchPlatformPart = async (
   if (isDataForPlatform(data, platformKeyMap.Discord.key)) {
     // 调用 Discord 的转发方法
     return await forwardPostDiscordService(data)
+  }
+  if (isDataForPlatform(data, platformKeyMap.Bluesky.key)) {
+    // 调用 Bluesky 的转发方法
+    return await forwardPostBlueskyService(data)
   }
 
   throw new AppError('当前平台暂不支持转发', 400)

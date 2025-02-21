@@ -88,3 +88,12 @@ export const parseLikeInput = (input: string): { type: 'LIKE' | 'PLAIN', value: 
   // 默认普通关键字
   return { type: 'PLAIN', value: `%${input}%` } // 自动包裹为模糊匹配
 }
+
+// 拼接 url
+export const urlJoinUtil = (...segments: string[]): string => {
+  // 合并路径并确保正确的斜杠
+  return segments
+    .map(segment => segment.replace(/(^\/+|\/+$)/g, '')) // 去除前后多余的斜杠
+    .filter(Boolean) // 删除空值
+    .join('/') // 用单个斜杠连接
+}

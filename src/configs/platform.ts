@@ -26,7 +26,7 @@ const forwardSettingDataDefaultX: z.infer<typeof forwardSettingDataSchemaX> = {
   'Access Token': '',
   'Access Token Secret': ''
 }
-// 添加 Telegram 所需的认证信息
+// Telegram
 const forwardSettingDataSchemaTelegram = z.object({
   'Bot Token': z.string().default(''),
   'Chat Id': z.string().default('')
@@ -50,11 +50,29 @@ const forwardSettingDataDefaultDiscord: z.infer<
   'Guild Id': '',
   'Channel Id': ''
 }
+// Bluesky
+const forwardSettingDataSchemaBluesky = z.object({
+  'PDS Host': z.string().default(''),
+  'Web Host': z.string().default(''),
+  'CDN Host': z.string().default(''),
+  Identifier: z.string().default(''),
+  Password: z.string().default('')
+})
+const forwardSettingDataDefaultBluesky: z.infer<
+  typeof forwardSettingDataSchemaBluesky
+> = {
+  'PDS Host': '',
+  'Web Host': '',
+  'CDN Host': '',
+  Identifier: '',
+  Password: ''
+}
 // 全部平台的 forwardSettingDataDefault
 export const forwardSettingDataDefaultAll = {
   ...forwardSettingDataDefaultX,
   ...forwardSettingDataDefaultTelegram,
-  ...forwardSettingDataDefaultDiscord
+  ...forwardSettingDataDefaultDiscord,
+  ...forwardSettingDataDefaultBluesky
 }
 
 // 关于导入与导出所需的平台数据
@@ -88,10 +106,19 @@ export const platformKeyMap = {
     couldForward: true,
     forwardSettingDataSchema: forwardSettingDataSchemaDiscord,
     forwardSettingDataDefault: forwardSettingDataDefaultDiscord
+  },
+  Bluesky: {
+    key: 'Bluesky',
+    name: 'Bluesky',
+    fontawesomeClass: 'fa-brands fa-bluesky',
+    couldImport: true,
+    couldForward: true,
+    forwardSettingDataSchema: forwardSettingDataSchemaBluesky,
+    forwardSettingDataDefault: forwardSettingDataDefaultBluesky
   }
 } as const
 // 这个手动写出来的原因是，zod枚举需要字面量类型数组
-export const platformKeyEnum = ['X', 'Telegram', 'Discord'] as const
+export const platformKeyEnum = ['X', 'Telegram', 'Discord', 'Bluesky'] as const
 
 // 类型检查以确保 platformKeyEnum 与 platformKeyMap 的值是同步的
 export type PlatformKeyMapValues =

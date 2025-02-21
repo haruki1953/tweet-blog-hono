@@ -1,13 +1,11 @@
-import { xtwitterConfig } from './config'
-
-const postConfig = xtwitterConfig
+import { blueskyConfig } from './dependencies'
 
 // 判断推文是否过长
-export const xtwitterPostContentCheckUtil = (content: string) => {
+export const blueskyPostContentCheckUtil = (content: string) => {
   // 长度
   const length = textToPostContentPartCalcCharNumber(content)
   // 是否超过限制
-  const isExceedsLengthLimit = length > postConfig.maxPostCharactersOnSend
+  const isExceedsLengthLimit = length > blueskyConfig.maxPostCharactersOnSend
   return {
     length,
     isExceedsLengthLimit
@@ -15,14 +13,15 @@ export const xtwitterPostContentCheckUtil = (content: string) => {
 }
 
 // 推文过长时，进行处理
-export const xtwitterPostContentSplitUtil = (content: string) => {
+export const blueskyPostContentSplitUtil = (content: string) => {
   const postContent = textToPostContentPart(content)
-  const postContentSplit = splitPostContent(postContent, postConfig.maxPostCharactersOnSend)
+  const postContentSplit = splitPostContent(postContent, blueskyConfig.maxPostCharactersOnSend)
   // console.log(postContentSplit)
   const postContentTextList = postContentSplit.map(p => textByPostContentPart(p))
   return postContentTextList
 }
 
+// 推文过长拆分的处理
 export const splitPostContent = (
   postContent: PostContentPart[],
   maxLength: number
@@ -34,19 +33,16 @@ export const splitPostContent = (
   const result: PostContentPart[][] = []
   let currentChunk: PostContentPart[] = []
   let currentLength = 0
-  // let totalChunks = 1
 
   // 将 maxLength 减10，以留出计数标识的位置，如 ' (999/999)'
   const maxLengthWithoutChunkCountLabel = maxLength - 10
 
-  // // 首先计算总字符数，以确定总的分块数
-  // const totalLength = textCalcPostContentCharNumber(postContent)
-  // totalChunks = Math.ceil(totalLength / maxLengthWithoutChunkCountLabel)
-
   for (const part of postContent) {
     if (part.type === 'link') {
       // 链接不能被裁剪，直接添加到当前块
-      const linkLength = postConfig.linkCharacterCountRepresentationInPost // 链接长度固定为23
+      // 【250221】这里进行修正，不要直接调用textCalcCharNumber，应调用textCalcPostContentCharNumber
+      // const linkLength = textCalcCharNumber(part.href)
+      const linkLength = textCalcPostContentCharNumber([part])
       if (currentLength + linkLength > maxLengthWithoutChunkCountLabel) {
         // 如果当前块加上链接会超出限制，则开始新的块
         result.push(currentChunk)
@@ -120,7 +116,9 @@ const truncateTextToFit = (text: string, maxLength: number): string => {
   let length = 0
 
   for (const char of text) {
-    const charLength = /[\u3000-\u303F\uFF00-\uFFEF\u4E00-\u9FFF\uAC00-\uD7AF]/.test(char) ? 2 : 1
+    // const charLength = /[\u3000-\u303F\uFF00-\uFFEF\u4E00-\u9FFF\uAC00-\uD7AF]/.test(char) ? 2 : 1
+    // 【bluesky】无论中英文都是算作1个字符
+    const charLength = 1
     if (length + charLength > maxLength) {
       break
     }
@@ -129,6 +127,51 @@ const truncateTextToFit = (text: string, maxLength: number): string => {
   }
 
   return result
+}
+
+// 推文链接信息的解析
+export const blueskyPostContentInfoUtil = (content: string) => {
+  const postContent = textToPostContentPart(content)
+  const linkInfo: Array<{
+    byteStart: number
+    byteEnd: number
+    link: string
+  }> = []
+
+  postContent.forEach((item, index) => {
+    if (item.type === 'link') {
+      // byteStart 数组中item之前的所有项的字节数之和
+      const byteStart = getPostContentByteLength(postContent.slice(0, index))
+      // byteEnd 为 byteStart 加本项的字节数
+      const byteEnd = byteStart + getPostContentByteLength([item])
+      // link
+      const link = item.href
+      linkInfo.push({
+        byteStart,
+        byteEnd,
+        link
+      })
+    }
+  })
+
+  // 将链接内容和文字组合为内容
+  const textContent = textByPostContentPartAndLinkByContent(postContent)
+
+  return {
+    textContent,
+    linkInfo
+  }
+}
+
+// 辅助函数，计算PostContentPart[]字节数之和
+const getPostContentByteLength = (
+  postContent: PostContentPart[]
+) => {
+  let byteLength = 0
+  postContent.forEach((i) => {
+    byteLength += getStringByteLength(i.content)
+  })
+  return byteLength
 }
 
 interface PostContentTextPart {
@@ -144,6 +187,7 @@ interface PostContentLinkPart {
 
 type PostContentPart = PostContentTextPart | PostContentLinkPart
 
+// 将PostContentPart[]拼接为字符串，这个将在拆分后使用
 export const textByPostContentPart = (postContent: PostContentPart[]): string => {
   let text = ''
   for (const p of postContent) {
@@ -156,6 +200,22 @@ export const textByPostContentPart = (postContent: PostContentPart[]): string =>
   return text
 }
 
+// 将PostContentPart[]拼接为字符串，这个将在解析链接后使用
+export const textByPostContentPartAndLinkByContent = (postContent: PostContentPart[]): string => {
+  let text = ''
+  for (const p of postContent) {
+    if (p.type === 'link') {
+      // text += p.href
+      // 【bluesky】应拼接链接显示的内容，因为之后会附加指定连接
+      text += p.content
+    } else {
+      text += p.content
+    }
+  }
+  return text
+}
+
+// 将字符串解析为PostContentPart[]
 export const textToPostContentPart = (text: string): PostContentPart[] => {
   const parts: PostContentPart[] = [] // 用于存储解析后的部分
   const regex = /(https?:\/\/[^\s]+)/g // 匹配链接的正则表达式
@@ -174,10 +234,11 @@ export const textToPostContentPart = (text: string): PostContentPart[] => {
     }
     // 添加链接部分到 parts 数组
     // 限制链接文本长度
+    // 【bluesky】正需要这个
     const linkContent = (() => {
       const cutHttp = match[0].replace(/https?:\/\//, '')
       const limitLength = (() => {
-        const maxLength = postConfig.linkContentMaxLength
+        const maxLength = blueskyConfig.linkContentMaxLength
         if (cutHttp.length > maxLength) {
           return cutHttp.slice(0, maxLength) + '...'
         } else {
@@ -209,27 +270,31 @@ export const textToPostContentPart = (text: string): PostContentPart[] => {
 export const textCalcCharNumber = (str: string): number => {
   let length = 0
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   for (const char of str) {
-    // 判断是否为宽字符（包括中文、日文、韩文以及其他全角字符）
+    // // 判断是否为宽字符（包括中文、日文、韩文以及其他全角字符）
     // if (/[\u3000-\u303F\uFF00-\uFFEF\u4E00-\u9FFF\uAC00-\uD7AF]/.test(char)) {
-    // 【250221】推特字数计算更正，ByteLengt大于2的算作2字符，其余是1字符
-    if (getStringByteLength(char) > 2) {
-      length += 2 // 宽字符长度计为2
-    } else {
-      length += 1 // 其他字符长度计为1
-    }
+    //   length += 2 // 宽字符长度计为2
+    // } else {
+    //   length += 1 // 其他字符长度计为1
+    // }
+    // 【bluesky】无论中英文都是算作1个字符
+    length += 1
   }
 
   return length
 }
 
+// 计算PostContentPart[]的字数
 export const textCalcPostContentCharNumber = (
   postContent: PostContentPart[]
 ) => {
   let length = 0
   postContent.forEach((p) => {
     if (p.type === 'link') {
-      length += postConfig.linkCharacterCountRepresentationInPost
+      // length += textCalcCharNumber(p.href)
+      // 【bluesky】应计算链接显示文本的长度
+      length += textCalcCharNumber(p.content)
     } else {
       length += textCalcCharNumber(p.content)
     }
@@ -237,6 +302,7 @@ export const textCalcPostContentCharNumber = (
   return length
 }
 
+// 计算字符串字数
 export const textToPostContentPartCalcCharNumber = (text: string) => {
   return textCalcPostContentCharNumber(textToPostContentPart(text))
 }
