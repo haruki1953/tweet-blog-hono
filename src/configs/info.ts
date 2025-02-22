@@ -4,7 +4,7 @@ export const appInfo = {
     link: 'https://github.com/haruki1953/Tweblog'
   },
   version: {
-    text: '1.2.0',
+    text: '1.3.0',
     link: 'https://github.com/haruki1953/Tweblog'
   },
   officialWebsite: {
